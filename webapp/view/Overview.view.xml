@@ -1,0 +1,18 @@
+<mvc:View
+  controllerName="com.internal.oof.controller.App"
+  xmlns="sap.m"
+  xmlns:mvc="sap.ui.core.mvc"
+  displayBlock="true"
+>
+  <Page title="{model_i18n>homePageTitle}">
+    <landmarkInfo>
+      <PageAccessibleLandmarkInfo
+        rootRole="Region"
+        rootLabel="{model_i18n>Overview_rootLabel}"
+        contentRole="Main"
+        contentLabel="{model_i18n>Overview_contentLabel}"
+        headerRole="Banner"
+        headerLabel="{model_i18n>Overview_headerLabel}"/>
+    </landmarkInfo>
+  </Page>
+</mvc:View>

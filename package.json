@@ -1,0 +1,17 @@
+{
+  "name": "com.internal.oof",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "ui5 serve -o index.html",
+    "start-mock": "ui5 serve -o test/mockServer.html",
+    "build": "ui5 build --all --clean-dest",
+    "serve-dist": "ws --compress -d dist --open"
+  },
+  "description": "",
+  "devDependencies": {
+    "@sapui5/ts-types": "^1.134.0",
+    "@ui5/cli": "^4.0.14"
+  }
+}

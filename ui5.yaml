@@ -1,0 +1,11 @@
+specVersion: "4.0"
+metadata:
+  name: com.internal.oof
+type: application
+framework:
+  name: OpenUI5
+  version: "1.134.0"
+  libraries:
+    - name: sap.m
+    - name: sap.ui.core
+    - name: themelib_sap_horizon
