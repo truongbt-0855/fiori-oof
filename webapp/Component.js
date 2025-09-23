@@ -29,7 +29,7 @@ sap.ui.define([
         bundleName: 'com.internal.oof.i18n.i18n'
       });
 
-      this.setModel(i18nModel, 'model_i18n');
+      this.setModel(i18nModel, 'i18n');
 
       // set device model
       const oDeviceModel = new JSONModel(Device);

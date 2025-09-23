@@ -1,0 +1,22 @@
+<core:FragmentDefinition
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core"
+>
+  <SelectDialog
+    id="idMaterialSelectDialog"
+    title="{i18n>materialValueHelpTitle}"
+    confirm="onSelectDialogConfirm"
+    cancel="onSelectDialogCancel"
+    search="onSelectDialogSearch"
+    liveChange="onSelectDialogLiveChange"
+    contentWidth="60%"
+    contentHeight="70%"
+  >
+    <StandardListItem
+      title="{materials>materialID} - {materials>materialDescription}"
+      description="Price: {materials>unitPrice} USD | Status: {materials>availability}"
+      info="{materials>availableQuantity} units"
+      type="Active"
+    />
+  </SelectDialog>
+</core:FragmentDefinition>

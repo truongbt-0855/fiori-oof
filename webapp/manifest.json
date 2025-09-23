@@ -10,13 +10,6 @@
       "version": "1.0.0"
     },
     "dataSources": {
-      "invoiceRemote": {
-        "uri": "V2/Northwind/Northwind.svc/",
-        "type": "OData",
-        "settings": {
-          "odataVersion": "2.0"
-        }
-      }
     }
   },
   "sap.ui": {
@@ -45,10 +38,6 @@
           ],
           "fallbackLocale": ""
         }
-      },
-      "invoice_data": {
-        "preload": true,
-        "dataSource": "invoiceRemote"
       }
     },
     "rootView": {
@@ -63,7 +52,7 @@
         }
       ]
     },
-    "flexEnabled": true,
+    "flexEnabled": false,
     "contentDensities": {
       "compact": true,
       "cozy": true
@@ -84,9 +73,9 @@
           "target": "overview"
         },
         {
-          "pattern": "detail/{invoiceId}",
-          "name": "detail",
-          "target": "detail"
+          "pattern": "create-so",
+          "name": "create_so",
+          "target": "create_so"
         }
       ],
       "targets": {
@@ -94,9 +83,9 @@
           "id": "overview",
           "name": "Overview"
         },
-        "detail": {
-          "id": "detail",
-          "name": "Detail"
+        "create_so": {
+          "id": "create_so",
+          "name": "CreateSO"
         }
       }
     }

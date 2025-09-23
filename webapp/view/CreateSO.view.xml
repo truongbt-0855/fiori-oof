@@ -1,0 +1,363 @@
+<mvc:View
+  controllerName="com.internal.oof.controller.CreateSO"
+  xmlns="sap.m"
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns:core="sap.ui.core"
+  xmlns:f="sap.ui.layout.form"
+  xmlns:unified="sap.ui.unified"
+  displayBlock="true"
+>
+  <Page title="{i18n>createSalesOrderTitle}" showNavButton="true" navButtonPress="onPageCreateSONavButtonPress">
+    <content>
+      <f:SimpleForm
+        id="idCreateSOSimpleForm"
+        layout="ResponsiveGridLayout"
+        editable="true"
+        labelSpanXL="3"
+        labelSpanL="3"
+        labelSpanM="3"
+        labelSpanS="12"
+        adjustLabelSpan="false"
+        emptySpanXL="4"
+        emptySpanL="4"
+        emptySpanM="4"
+        emptySpanS="0"
+        columnsXL="1"
+        columnsL="1"
+        columnsM="1"
+        singleContainerFullSize="false"
+        class="sapUiResponsiveMargin"
+      >
+        <f:content>
+          <!-- Header Information Section -->
+          <core:Title text="{i18n>headerSectionTitle}" />
+          
+          <!-- Sold-to Customer -->
+          <Label text="{i18n>soldToLabel}" required="true" />
+          <ComboBox
+            id="idSoldToComboBox"
+            placeholder="{i18n>soldToPlaceholder}"
+            selectedKey="{/soldToCustomer}"
+            items="{/customers}"
+            valueState="{/soldToState}"
+            valueStateText="{/soldToStateText}"
+            selectionChange="onSoldToComboBoxSelectionChange"
+            required="true"
+          >
+            <core:Item key="{customerID}" text="{customerID} - {customerName}" />
+          </ComboBox>
+
+          <!-- Ship-to Customer -->
+          <Label text="{i18n>shipToLabel}" required="true" />
+          <ComboBox
+            id="idShipToComboBox"
+            placeholder="{i18n>shipToPlaceholder}"
+            selectedKey="{/shipToCustomer}"
+            items="{/customers}"
+            valueState="{/shipToState}"
+            valueStateText="{/shipToStateText}"
+            selectionChange="onShipToComboBoxSelectionChange"
+            required="true"
+          >
+            <core:Item key="{customerID}" text="{customerID} - {customerName}" />
+          </ComboBox>
+
+          <!-- PO Number -->
+          <Label text="{i18n>poNumberLabel}" required="true" />
+          <Input
+            id="idPONumberInput"
+            value="{/poNumber}"
+            placeholder="{i18n>poNumberPlaceholder}"
+            valueState="{/poNumberState}"
+            valueStateText="{/poNumberStateText}"
+            change="onPONumberInputChange"
+            required="true"
+          />
+
+          <!-- Request Delivery Date -->
+          <Label text="{i18n>requestDeliveryDateLabel}" required="true" />
+          <DatePicker
+            id="idRequestDeliveryDatePicker"
+            value="{/requestDeliveryDate}"
+            placeholder="{i18n>requestDeliveryDatePlaceholder}"
+            valueState="{/requestDeliveryDateState}"
+            valueStateText="{/requestDeliveryDateStateText}"
+            change="onRequestDeliveryDatePickerChange"
+            minDate="{/minDeliveryDate}"
+            required="true"
+          />
+
+          <!-- Incoterms -->
+          <Label text="{i18n>incotermsLabel}" required="true" />
+          <ComboBox
+            id="idIncotermsComboBox"
+            placeholder="{i18n>incotermsPlaceholder}"
+            selectedKey="{/incoterms}"
+            items="{/incotermsList}"
+            valueState="{/incotermsState}"
+            valueStateText="{/incotermsStateText}"
+            selectionChange="onIncotermsComboBoxSelectionChange"
+            required="true"
+          >
+            <core:Item key="{code}" text="{code} - {description}" />
+          </ComboBox>
+
+          <!-- Line Items Section -->
+          <core:Title text="{i18n>lineItemsSectionTitle}" />
+          
+        </f:content>
+      </f:SimpleForm>
+
+      <!-- Line Items Table -->
+      <Table
+        id="idLineItemsTable"
+        items="{/lineItems}"
+        growing="true"
+        growingThreshold="20"
+        mode="SingleSelect"
+        class="sapUiResponsiveMargin"
+      >
+        <headerToolbar>
+          <OverflowToolbar>
+            <Title text="{i18n>lineItemsTableTitle}" level="H2" />
+            <ToolbarSpacer />
+            <Button
+              id="idAddLineItemButton"
+              text="{i18n>addLineItemButtonText}"
+              type="Emphasized"
+              press="onButtonAddLineItemPress"
+              icon="sap-icon://add"
+            />
+            <Button
+              id="idDeleteLineItemButton"
+              text="{i18n>deleteLineItemButtonText}"
+              press="onButtonDeleteLineItemPress"
+              icon="sap-icon://delete"
+              enabled="{= ${/selectedLineItemIndex} >= 0 }"
+            />
+          </OverflowToolbar>
+        </headerToolbar>
+
+        <columns>
+          <Column>
+            <Text text="{i18n>materialColumnTitle}" />
+          </Column>
+          <Column>
+            <Text text="{i18n>quantityColumnTitle}" />
+          </Column>
+          <Column>
+            <Text text="{i18n>uomColumnTitle}" />
+          </Column>
+          <Column>
+            <Text text="{i18n>priceColumnTitle}" />
+          </Column>
+          <Column>
+            <Text text="{i18n>plantColumnTitle}" />
+          </Column>
+          <Column>
+            <Text text="{i18n>storageLocationColumnTitle}" />
+          </Column>
+          <Column>
+            <Text text="{i18n>totalColumnTitle}" />
+          </Column>
+        </columns>
+
+        <items>
+          <ColumnListItem press="onLineItemPress">
+            <cells>
+              <!-- Material -->
+              <Input
+                value="{materialID}"
+                placeholder="{i18n>materialIdPlaceholder}"
+                valueHelpRequest="onMaterialValueHelpRequest"
+                showValueHelp="true"
+                change="onLineItemMaterialChange"
+                valueState="{materialIDState}"
+                valueStateText="{materialIDStateText}"
+              />
+              
+              <!-- Quantity -->
+              <Input
+                value="{quantity}"
+                placeholder="{i18n>quantityPlaceholder}"
+                type="Number"
+                change="onLineItemQuantityChange"
+                valueState="{quantityState}"
+                valueStateText="{quantityStateText}"
+              />
+              
+              <!-- UoM -->
+              <ComboBox
+                selectedKey="{uom}"
+                items="{/uomList}"
+                placeholder="{i18n>uomPlaceholder}"
+                selectionChange="onLineItemUoMChange"
+                valueState="{uomState}"
+                valueStateText="{uomStateText}"
+              >
+                <core:Item key="{code}" text="{code} - {description}" />
+              </ComboBox>
+              
+              <!-- Price -->
+              <Input
+                value="{unitPrice}"
+                placeholder="{i18n>pricePlaceholder}"
+                type="Number"
+                change="onLineItemPriceChange"
+                valueState="{priceState}"
+                valueStateText="{priceStateText}"
+              />
+              
+              <!-- Plant -->
+              <ComboBox
+                selectedKey="{plant}"
+                items="{/plantsList}"
+                placeholder="{i18n>plantPlaceholder}"
+                selectionChange="onLineItemPlantChange"
+                valueState="{plantState}"
+                valueStateText="{plantStateText}"
+              >
+                <core:Item key="{plantCode}" text="{plantCode} - {plantName}" />
+              </ComboBox>
+              
+              <!-- Storage Location -->
+              <ComboBox
+                selectedKey="{storageLocation}"
+                items="{storageLocations}"
+                placeholder="{i18n>storageLocationPlaceholder}"
+                selectionChange="onLineItemStorageLocationChange"
+                valueState="{storageLocationState}"
+                valueStateText="{storageLocationStateText}"
+              >
+                <core:Item key="{locationCode}" text="{locationCode} - {locationName}" />
+              </ComboBox>
+              
+              <!-- Total -->
+              <ObjectNumber
+                number="{totalPrice}"
+                unit="{currency}"
+                state="Success"
+                emphasized="true"
+              />
+            </cells>
+          </ColumnListItem>
+        </items>
+      </Table>
+
+      <!-- Attachments Section -->
+      <Panel
+        id="idAttachmentsPanel"
+        headerText="{i18n>attachmentsSectionTitle}"
+        expandable="true"
+        expanded="false"
+        class="sapUiResponsiveMargin"
+      >
+        <content>
+          <VBox class="sapUiMediumMargin">
+            <Label text="{i18n>specFileLabel}" class="sapUiTinyMarginBottom" />
+            <unified:FileUploader
+              id="idSpecFileUploader"
+              buttonText="{i18n>chooseSpecFileText}"
+              placeholder="{i18n>specFilePlaceholder}"
+              fileType="pdf,doc,docx,txt"
+              maximumFilenameLength="100"
+              change="onFileUploaderChange"
+            />
+            
+            <Label text="{i18n>approvalDocsLabel}" class="sapUiSmallMarginTop sapUiTinyMarginBottom" />
+            <unified:FileUploader
+              id="idApprovalFileUploader"
+              buttonText="{i18n>chooseApprovalFileText}"
+              placeholder="{i18n>approvalFilePlaceholder}"
+              fileType="pdf,doc,docx,txt,jpg,png"
+              maximumFilenameLength="100"
+              change="onFileUploaderChange"
+            />
+            
+            <Text text="{i18n>attachmentTypesText}" class="sapUiTinyText sapUiSmallMarginTop" />
+            
+            <!-- Uploaded Files List -->
+            <List 
+              id="idAttachedFilesList"
+              items="{/attachedFiles}"
+              class="sapUiSmallMarginTop"
+              visible="{= ${/attachedFiles}.length > 0 }"
+            >
+              <StandardListItem
+                title="{fileName}"
+                description="{fileType} • {fileSize}"
+                icon="sap-icon://document"
+                type="Active"
+                press="onStandardListItemPress"
+              />
+            </List>
+          </VBox>
+        </content>
+      </Panel>
+
+      <!-- Order Summary -->
+      <Panel
+        id="idOrderSummaryPanel"
+        headerText="{i18n>orderSummaryTitle}"
+        class="sapUiResponsiveMargin"
+      >
+        <content>
+          <f:SimpleForm
+            layout="ResponsiveGridLayout"
+            editable="false"
+            labelSpanXL="6"
+            labelSpanL="6"
+            labelSpanM="6"
+            labelSpanS="12"
+          >
+            <f:content>
+              <Label text="{i18n>totalItemsLabel}" />
+              <Text text="{/totalItems}" />
+              
+              <Label text="{i18n>netAmountLabel}" />
+              <ObjectNumber 
+                number="{/netAmount}" 
+                unit="{/currency}"
+                state="Success"
+                emphasized="true"
+              />
+              
+              <Label text="{i18n>taxAmountLabel}" />
+              <ObjectNumber 
+                number="{/taxAmount}" 
+                unit="{/currency}"
+              />
+              
+              <Label text="{i18n>totalAmountLabel}" />
+              <ObjectNumber 
+                number="{/totalAmount}" 
+                unit="{/currency}"
+                state="Success"
+                emphasized="true"
+                class="sapUiLargeMarginTop"
+              />
+            </f:content>
+          </f:SimpleForm>
+        </content>
+      </Panel>
+    </content>
+
+    <footer>
+      <OverflowToolbar>
+        <ToolbarSpacer />
+        <Button
+          id="idCancelButton"
+          text="{i18n>cancelButtonText}"
+          press="onButtonCancelPress"
+        />
+        <Button
+          id="idSaveButton"
+          text="{i18n>saveButtonText}"
+          type="Emphasized"
+          press="onButtonSavePress"
+          enabled="{/formValid}"
+        />
+      </OverflowToolbar>
+    </footer>
+  </Page>
+</mvc:View>
