@@ -1,0 +1,94 @@
+_schema-version: "3.2"
+ID: fiori_oof
+description: Display Employee Bank Details
+version: 0.0.2
+modules:
+- name: fiori_oof-destination-content
+  type: com.sap.application.content
+  requires:
+  - name: fiori_oof-destination-service
+    parameters:
+      content-target: true
+  - name: fiori_oof-repo-host
+    parameters:
+      service-key:
+        name: fiori_oof-repo-host-key
+  - name: fiori_oof-uaa
+    parameters:
+      service-key:
+        name: fiori_oof-uaa-key
+  parameters:
+    content:
+      instance:
+        destinations:
+        - Name: fiori_oof_html_repo_host
+          ServiceInstanceName: fiori_oof-html5-srv
+          ServiceKeyName: fiori_oof-repo-host-key
+          sap.cloud.service: fiori_oof
+        - Authentication: OAuth2UserTokenExchange
+          Name: fiori_oof_uaa
+          ServiceInstanceName: fiori_oof-xsuaa-srv
+          ServiceKeyName: fiori_oof-uaa-key
+          sap.cloud.service: fiori_oof
+        existing_destinations_policy: ignore
+  build-parameters:
+    no-source: true
+- name: fiori_oof-app-content
+  type: com.sap.application.content
+  path: .
+  requires:
+  - name: fiori_oof-repo-host
+    parameters:
+      content-target: true
+  build-parameters:
+    build-result: resources
+    requires:
+    - artifacts:
+      - fiorioof.zip
+      name: fiorioof
+      target-path: resources/
+- name: fiorioof
+  type: html5
+  path: .
+  build-parameters:
+    build-result: dist
+    builder: custom
+    commands:
+    - npm install
+    - npm run build:cf
+    supported-platforms: []
+resources:
+- name: fiori_oof-destination-service
+  type: org.cloudfoundry.managed-service
+  parameters:
+    config:
+      HTML5Runtime_enabled: true
+      init_data:
+        instance:
+          destinations:
+          - Authentication: NoAuthentication
+            Name: ui5
+            ProxyType: Internet
+            Type: HTTP
+            URL: https://ui5.sap.com
+          existing_destinations_policy: update
+      version: 1.0.0
+    service: destination
+    service-name: fiori_oof-destination-service
+    service-plan: lite
+- name: fiori_oof-uaa
+  type: org.cloudfoundry.managed-service
+  parameters:
+    path: ./xs-security.json
+    service: xsuaa
+    service-name: fiori_oof-xsuaa-srv
+    service-plan: application
+- name: fiori_oof-repo-host
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: html5-apps-repo
+    service-name: fiori_oof-html5-srv
+    service-plan: app-host
+parameters:
+  deploy_mode: html5-repo
+  enable-parallel-deployments: true

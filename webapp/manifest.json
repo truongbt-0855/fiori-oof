@@ -9,7 +9,17 @@
     "applicationVersion": {
       "version": "1.0.0"
     },
-    "dataSources": {
+    "dataSources": {},
+    "crossNavigation": {
+      "inbounds": {
+        "oof-display": {
+          "semanticObject": "oof",
+          "action": "display",
+          "title": "Internal OOF App",
+          "subTitle": "Manage OOF",
+          "icon": "sap-icon://action"
+        }
+      }
     }
   },
   "sap.ui": {
@@ -33,9 +43,7 @@
         "type": "sap.ui.model.resource.ResourceModel",
         "settings": {
           "bundleName": "com.internal.oof.i18n.i18n",
-          "supportedLocales": [
-            ""
-          ],
+          "supportedLocales": [""],
           "fallbackLocale": ""
         }
       }
@@ -57,6 +65,11 @@
       "compact": true,
       "cozy": true
     },
+    "sap.cloud": {
+      "public": true,
+      "service": "fiori_oof"
+    },
+
     "routing": {
       "config": {
         "routerClass": "sap.m.routing.Router",
