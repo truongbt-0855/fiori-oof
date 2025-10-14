@@ -1,0 +1,24 @@
+specVersion: '2.6'
+metadata:
+  name: fiori-oof
+type: application
+framework:
+  name: OpenUI5
+  version: "1.134.0"
+  libraries:
+    - name: sap.m
+    - name: sap.ui.core
+    - name: themelib_sap_horizon
+
+server:
+  customMiddleware:
+    - name: fiori-tools-proxy
+      afterMiddleware: compression
+      configuration:
+        backend:
+          - path: /api
+            url: https://803f6caftrial-dev-oof-backend-srv.cfapps.us10-001.hana.ondemand.com
+            headers:
+              "Access-Control-Allow-Origin": "*"
+              "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS"
+              "Access-Control-Allow-Headers": "Content-Type, Authorization"

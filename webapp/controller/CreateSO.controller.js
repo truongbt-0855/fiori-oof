@@ -7,12 +7,15 @@ sap.ui.define([
   'sap/ui/core/Fragment',
   'sap/ui/core/format/DateFormat',
   'sap/ui/model/Filter',
-  'sap/ui/model/FilterOperator'
-], (Controller, MessageToast, MessageBox, ValueState, JSONModel, Fragment, DateFormat, Filter, FilterOperator) => {
+  'sap/ui/model/FilterOperator',
+  '../utils/Config'
+], (Controller, MessageToast, MessageBox, ValueState, JSONModel, Fragment, DateFormat, Filter, FilterOperator, Config) => {
   'use strict';
 
   return Controller.extend('com.internal.oof.controller.CreateSO', {
     onInit() {
+      // Get API URL from config
+      this.MATERIAL_API_URL = Config.getMaterialApiUrl();
       this.getView().addStyleClass(this.getOwnerComponent().getContentDensityClass());
       
       // Initialize form data model
@@ -472,7 +475,9 @@ sap.ui.define([
       MessageToast.show("File selected: " + sFileName);
     },
 
-    onMaterialIDInputValueHelpRequest: function() {
+    onMaterialValueHelpRequest: function(oEvent) {
+      // Save reference to input field focus click
+      this._oCurrentMaterialInput = oEvent.getSource();
       // Open material value help dialog
       this._openMaterialValueHelp();
     },
@@ -495,43 +500,77 @@ sap.ui.define([
       }
     },
 
-    _loadMaterialData: function() {
-      // Mock material data - in real app, this would come from S/4HANA
-      const aMaterials = [
-        { 
-          materialID: "MAT001", 
-          materialDescription: "Laptop Computer Dell XPS 13",
-          unitPrice: 1299.99,
-          availability: "Available",
-          availableQuantity: 150
-        },
-        { 
-          materialID: "MAT002", 
-          materialDescription: "Monitor 27 inch 4K",
-          unitPrice: 599.99,
-          availability: "Available",
-          availableQuantity: 75
-        },
-        { 
-          materialID: "MAT003", 
-          materialDescription: "Wireless Mouse Logitech MX",
-          unitPrice: 89.99,
-          availability: "Limited",
-          availableQuantity: 25
-        },
-        { 
-          materialID: "MAT004", 
-          materialDescription: "Mechanical Keyboard RGB",
-          unitPrice: 159.99,
-          availability: "Out of Stock",
-          availableQuantity: 0
-        }
-      ];
+        // Constants
 
+    _loadMaterialData: function() {
+      if (!this._oMaterialDialog) return;
+      
+      this._oMaterialDialog.setBusy(true);
+      
+      this._callMaterialAPI()
+        .then(this._processMaterialData.bind(this))
+        .catch(this._handleMaterialError.bind(this))
+        .finally(() => {
+          if (this._oMaterialDialog) {
+            this._oMaterialDialog.setBusy(false);
+          }
+        });
+    },
+
+    _processMaterialData: function(oData) {
+      if (!oData || !oData.value) {
+        throw new Error("Invalid API response");
+      }
+      
+      // Transform API data to UI model format
+      const aMaterials = oData.value.map(item => ({
+        materialID: item.name,
+        materialDescription: item.description,
+        unitPrice: Math.floor(Math.random() * 1000) + 50, // Random price vì API không có
+        availability: "Available",
+        availableQuantity: Math.floor(Math.random() * 200) + 10 // Random stock
+      }));
+      
+      // Set model to dialog
       if (this._oMaterialDialog) {
-        const oMaterialModel = new JSONModel({ materials: aMaterials });
+        const oMaterialModel = new JSONModel(aMaterials);
         this._oMaterialDialog.setModel(oMaterialModel, "materials");
       }
+      
+      console.log("Materials loaded from API:", aMaterials.length);
+    },
+
+    _handleMaterialError: function(error) {
+      console.error("Material API error:", error);
+      MessageToast.show("Failed to load materials from server");
+      
+      // Fallback to empty array
+      if (this._oMaterialDialog) {
+        const oMaterialModel = new JSONModel([]);
+        this._oMaterialDialog.setModel(oMaterialModel, "materials");
+      }
+    },
+
+    _callMaterialAPI: function() {
+      return new Promise((resolve, reject) => {
+        jQuery.ajax({
+          url: this.MATERIAL_API_URL,
+          type: "GET",
+          contentType: "application/json",
+          success: function(data) {
+            console.log("API Response:", data);
+            resolve(data);
+          },
+          error: function(xhr, status, error) {
+            console.error("API Error:", {
+              status: xhr.status,
+              statusText: xhr.statusText,
+              responseText: xhr.responseText
+            });
+            reject(error);
+          }
+        });
+      });
     },
 
     onSelectDialogConfirm: function(oEvent) {
@@ -540,18 +579,28 @@ sap.ui.define([
         const oSelectedItem = aSelectedItems[0];
         const oContext = oSelectedItem.getBindingContext("materials");
         const oSelectedMaterial = oContext.getObject();
+        console.log(oSelectedMaterial);
+
+        // Set value directly into input field
+        this._oCurrentMaterialInput.setValue(oSelectedMaterial.materialID);
         
-        const oModel = this.getView().getModel();
-        oModel.setProperty("/materialID", oSelectedMaterial.materialID);
-        oModel.setProperty("/materialDescription", oSelectedMaterial.materialDescription);
-        oModel.setProperty("/unitPrice", oSelectedMaterial.unitPrice);
+        // Trigger change event to update model
+        this._oCurrentMaterialInput.fireChange({
+            value: oSelectedMaterial.materialID
+        });
         
-        // Set availability status
-        this._setAvailabilityStatus(oSelectedMaterial);
         
-        // Clear validation state
-        oModel.setProperty("/materialIDState", ValueState.None);
-        oModel.setProperty("/materialIDStateText", "");
+        // const oModel = this.getView().getModel();
+        // oModel.setProperty("/materialID", oSelectedMaterial.materialID);
+        // oModel.setProperty("/materialDescription", oSelectedMaterial.materialDescription);
+        // oModel.setProperty("/unitPrice", oSelectedMaterial.unitPrice);
+        
+        // // Set availability status
+        // this._setAvailabilityStatus(oSelectedMaterial);
+        
+        // // Clear validation state
+        // oModel.setProperty("/materialIDState", ValueState.None);
+        // oModel.setProperty("/materialIDStateText", "");
         
         // Recalculate price
         this._calculateTotalPrice();

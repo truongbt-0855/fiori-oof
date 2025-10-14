@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "ui5 serve -o index.html",
+    "start": "ui5 serve -o index.html --config ui5-local.yaml",
     "start-mock": "ui5 serve -o test/mockServer.html",
     "build": "ui5 build --clean-dest --dest dist --include-task=generateManifestBundle generateCachebusterInfo",
     "build:opt": "ui5 build self-contained --clean-dest --dest dist",
@@ -16,13 +16,13 @@
   },
   "description": "",
   "devDependencies": {
+    "@sap/ux-ui5-tooling": "^1.19.1",
     "@sapui5/ts-types": "^1.134.0",
     "@ui5/cli": "^4.0.14",
     "rimraf": "^5.0.0"
   },
   "dependencies": {
     "@sap/ui5-builder-webide-extension": "^1.1.9",
-    "@sap/ux-ui5-tooling": "^1.17.5",
     "ui5-task-zipper": "^3.4.1"
   }
 }

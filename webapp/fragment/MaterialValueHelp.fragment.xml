@@ -11,6 +11,10 @@
     liveChange="onSelectDialogLiveChange"
     contentWidth="60%"
     contentHeight="70%"
+    items="{
+      path: 'materials>/',
+      templateShareable: false
+    }"
   >
     <StandardListItem
       title="{materials>materialID} - {materials>materialDescription}"
