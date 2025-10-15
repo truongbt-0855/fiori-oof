@@ -1,0 +1,155 @@
+<!-- filepath: webapp/view/SOList.view.xml -->
+<mvc:View
+    controllerName="com.internal.oof.controller.SOList"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:form="sap.ui.layout.form"
+>
+    
+    <Page title="Sales Orders" showNavButton="true" navButtonPress="onNavBack">
+        <content>
+            <VBox class="sapUiMediumMargin">
+                
+                <!-- Filter Panel -->
+                <Panel headerText="Search Filters" expandable="true" expanded="true">
+                    <content>
+                        <VBox class="sapUiMediumMargin">
+                            <form:SimpleForm 
+                                layout="ResponsiveGridLayout"
+                                editable="true"
+                                maxContainerCols="2"
+                                labelSpanL="3"
+                                labelSpanM="3"
+                                labelSpanS="12"
+                                adjustLabelSpan="false"
+                                emptySpanL="1"
+                                emptySpanM="1"
+                                emptySpanS="0"
+                                columnsL="1"
+                                columnsM="1"
+                                singleContainerFullSize="false">
+                                <form:content>
+                                    
+                                    <Label text="Sold-to Party:" />
+                                    <Input id="soldToFilter" 
+                                          placeholder="Enter sold-to party (e.g. BP1710)"
+                                          showValueHelp="true"
+                                          valueHelpRequest="onSoldToValueHelp" />
+                                    
+                                    <Label text="Ship-to PO:" />
+                                    <Input id="shipToFilter" 
+                                          placeholder="Enter ship-to PO number" />
+                                    
+                                    <Label text="Customer PO:" />
+                                    <Input id="poNumberFilter" 
+                                          placeholder="Enter customer PO number" />
+                                    
+                                </form:content>
+                            </form:SimpleForm>
+                            
+                            <HBox class="sapUiMediumMarginTop">
+                                <Button text="Search" 
+                                       press="onSearchPress" 
+                                       type="Emphasized" 
+                                       class="sapUiMediumMarginEnd" />
+                                <Button text="Clear" 
+                                       press="onClearPress" 
+                                       type="Transparent" />
+                            </HBox>
+                            
+                        </VBox>
+                    </content>
+                </Panel>
+                
+                <!-- Results Table -->
+                <Table id="soTable" 
+                       items="{/SalesOrders}"
+                       mode="MultiSelect"
+                       class="sapUiMediumMarginTop"
+                       growing="true"
+                       growingThreshold="50">
+                    
+                    <headerToolbar>
+                        <Toolbar>
+                            <Title text="Sales Orders" level="H2"/>
+                            <ToolbarSpacer />
+                            <Button text="Create SO" 
+                                   press="onCreateSOPress" 
+                                   type="Emphasized"
+                                   icon="sap-icon://add" />
+                            <Button text="Export" 
+                                   press="onExportPress"
+                                   icon="sap-icon://excel-attachment" />
+                        </Toolbar>
+                    </headerToolbar>
+                    
+                    <columns>
+                        <Column>
+                            <Text text="Sales Order" />
+                        </Column>
+                        <Column>
+                            <Text text="Sold-to Party" />
+                        </Column>
+                        <Column>
+                            <Text text="Customer PO" />
+                        </Column>
+                        <Column>
+                            <Text text="Ship-to PO" />
+                        </Column>
+                        <Column>
+                            <Text text="Delivery Date" />
+                        </Column>
+                        <Column>
+                            <Text text="Incoterms" />
+                        </Column>
+                        <Column>
+                            <Text text="Status" />
+                        </Column>
+                        <Column>
+                            <Text text="Total Amount" />
+                        </Column>
+                        <Column>
+                            <Text text="Actions" />
+                        </Column>
+                    </columns>
+                    
+                    <items>
+                        <ColumnListItem press="onItemPress" type="Navigation">
+                            <cells>
+                                <Text text="{SalesOrder}" />
+                                
+                                <Text text="{SoldToParty}" />
+                                
+                                <Text text="{PurchaseOrderByCustomer}" />
+                                
+                                <Text text="{PurchaseOrderByShipToParty}" />
+                                
+                                <Text text="{path: 'RequestedDeliveryDate', type: 'sap.ui.model.odata.type.Date'}" />
+                                
+                                <Text text="{IncotermsClassification}" />
+                                
+                                <ObjectStatus text="{path: 'Status', formatter: '.formatStatus'}" 
+                                            state="{path: 'Status', formatter: '.formatStatusState'}" />
+                                
+                                <ObjectNumber number="{TotalNetAmount}" 
+                                            unit="{TransactionCurrency}" />
+                                
+                                <HBox>
+                                    <Button icon="sap-icon://edit" 
+                                           press="onEditPress"
+                                           type="Transparent"
+                                           tooltip="Edit" />
+                                    <Button icon="sap-icon://delete" 
+                                           press="onDeletePress"
+                                           type="Transparent"
+                                           tooltip="Delete" />
+                                </HBox>
+                            </cells>
+                        </ColumnListItem>
+                    </items>
+                </Table>
+                
+            </VBox>
+        </content>
+    </Page>
+</mvc:View>

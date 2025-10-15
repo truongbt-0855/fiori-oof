@@ -9,7 +9,12 @@
     "applicationVersion": {
       "version": "1.0.0"
     },
-    "dataSources": {},
+    "dataSources": {
+      "salesOrderService": {
+        "uri": "https://803f6caftrial-dev-oof-backend-srv.cfapps.us10-001.hana.ondemand.com/odata/v4/admin/",
+        "type": "OData"
+      }
+    },
     "crossNavigation": {
       "inbounds": {
         "oof-display": {
@@ -39,6 +44,15 @@
       }
     },
     "models": {
+      "": {
+        "dataSource": "salesOrderService",
+        "type": "sap.ui.model.odata.v4.ODataModel",
+        "settings": {
+          "operationMode": "Server",
+          "autoExpandSelect": true,
+          "earlyRequests": true
+        }
+      },
       "i18n": {
         "type": "sap.ui.model.resource.ResourceModel",
         "settings": {
@@ -89,6 +103,11 @@
           "pattern": "create-so",
           "name": "create_so",
           "target": "create_so"
+        },
+        {
+          "pattern": "sales-orders",
+          "name": "salesOrderList",
+          "target": "salesOrderList"
         }
       ],
       "targets": {
@@ -99,6 +118,10 @@
         "create_so": {
           "id": "create_so",
           "name": "CreateSO"
+        },
+        "salesOrderList": {
+          "id": "salesOrderList",
+          "name": "SOList"
         }
       }
     }
