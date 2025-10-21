@@ -7,14 +7,9 @@
     "description": "{{appDescription}}",
     "type": "application",
     "applicationVersion": {
-      "version": "1.0.0"
+      "version": "1.0.1"
     },
-    "dataSources": {
-      "salesOrderService": {
-        "uri": "https://803f6caftrial-dev-oof-backend-srv.cfapps.us10-001.hana.ondemand.com/odata/v4/admin/",
-        "type": "OData"
-      }
-    },
+    "dataSources": {},
     "crossNavigation": {
       "inbounds": {
         "oof-display": {
@@ -45,12 +40,12 @@
     },
     "models": {
       "": {
-        "dataSource": "salesOrderService",
         "type": "sap.ui.model.odata.v4.ODataModel",
         "settings": {
+          "synchronizationMode": "None",
           "operationMode": "Server",
           "autoExpandSelect": true,
-          "earlyRequests": true
+          "serviceUrl": "https://803f6caftrial-dev-oof-backend-srv.cfapps.us10-001.hana.ondemand.com/odata/v4/admin/"
         }
       },
       "i18n": {

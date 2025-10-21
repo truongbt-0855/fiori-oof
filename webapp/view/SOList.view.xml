@@ -13,7 +13,7 @@
                 <!-- Filter Panel -->
                 <Panel headerText="Search Filters" expandable="true" expanded="true">
                     <content>
-                        <VBox class="sapUiMediumMargin">
+                        <VBox class="">
                             <form:SimpleForm 
                                 layout="ResponsiveGridLayout"
                                 editable="true"
@@ -73,6 +73,10 @@
                         <Toolbar>
                             <Title text="Sales Orders" level="H2"/>
                             <ToolbarSpacer />
+                            <Button text="Test Connection" 
+                                   press="testODataConnection" 
+                                   type="Transparent"
+                                   icon="sap-icon://connected" />
                             <Button text="Create SO" 
                                    press="onCreateSOPress" 
                                    type="Emphasized"
@@ -117,20 +121,13 @@
                         <ColumnListItem press="onItemPress" type="Navigation">
                             <cells>
                                 <Text text="{SalesOrder}" />
-                                
                                 <Text text="{SoldToParty}" />
-                                
                                 <Text text="{PurchaseOrderByCustomer}" />
-                                
                                 <Text text="{PurchaseOrderByShipToParty}" />
-                                
-                                <Text text="{path: 'RequestedDeliveryDate', type: 'sap.ui.model.odata.type.Date'}" />
-                                
+                                <Text text="{RequestedDeliveryDate}" />
                                 <Text text="{IncotermsClassification}" />
-                                
                                 <ObjectStatus text="{path: 'Status', formatter: '.formatStatus'}" 
                                             state="{path: 'Status', formatter: '.formatStatusState'}" />
-                                
                                 <ObjectNumber number="{TotalNetAmount}" 
                                             unit="{TransactionCurrency}" />
                                 

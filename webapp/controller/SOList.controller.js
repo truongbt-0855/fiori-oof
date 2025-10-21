@@ -12,6 +12,9 @@ sap.ui.define(
 
     return Controller.extend('com.internal.oof.controller.SOList', {
       onInit: function () {
+        const oComponent = this.getOwnerComponent();
+        const oModel = oComponent.getModel();
+        this.getView().setModel(oModel);
         // Initialize view
       },
 
