@@ -79,7 +79,7 @@ sap.ui.define(
             return 'Draft';
           case 2:
             return 'Submitted';
-          case 8:
+          case '8':
             return 'Error';
           default:
             return 'Unknown';

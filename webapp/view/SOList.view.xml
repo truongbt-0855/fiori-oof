@@ -73,10 +73,6 @@
                         <Toolbar>
                             <Title text="Sales Orders" level="H2"/>
                             <ToolbarSpacer />
-                            <Button text="Test Connection" 
-                                   press="testODataConnection" 
-                                   type="Transparent"
-                                   icon="sap-icon://connected" />
                             <Button text="Create SO" 
                                    press="onCreateSOPress" 
                                    type="Emphasized"
@@ -126,10 +122,9 @@
                                 <Text text="{PurchaseOrderByShipToParty}" />
                                 <Text text="{RequestedDeliveryDate}" />
                                 <Text text="{IncotermsClassification}" />
-                                <ObjectStatus text="{path: 'Status', formatter: '.formatStatus'}" 
-                                            state="{path: 'Status', formatter: '.formatStatusState'}" />
-                                <ObjectNumber number="{TotalNetAmount}" 
-                                            unit="{TransactionCurrency}" />
+                                <ObjectStatus text="{path: 'Status', formatter: 'formatStatus'}" 
+                                            state="{path: 'Status', formatter: 'formatStatusState'}" />
+                                <Text text="{parts: ['TotalNetAmount', 'TransactionCurrency'], formatter: 'formatCurrency'}" />
                                 
                                 <HBox>
                                     <Button icon="sap-icon://edit" 
