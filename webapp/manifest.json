@@ -7,7 +7,7 @@
     "description": "{{appDescription}}",
     "type": "application",
     "applicationVersion": {
-      "version": "1.0.1"
+      "version": "1.0.2"
     },
     "dataSources": {},
     "crossNavigation": {
@@ -101,7 +101,7 @@
         },
         {
           "pattern": "sales-orders",
-          "name": "salesOrderList",
+          "name": "list_so",
           "target": "salesOrderList"
         }
       ],
@@ -115,7 +115,7 @@
           "name": "CreateSO"
         },
         "salesOrderList": {
-          "id": "salesOrderList",
+          "id": "list_so",
           "name": "SOList"
         }
       }

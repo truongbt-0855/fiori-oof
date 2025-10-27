@@ -26,22 +26,36 @@ sap.ui.define(
       _buildFilters: function () {
         const aFilters = [];
 
-        // Sold-to filter
-        const sSoldTo = this.byId('soldToFilter').getValue();
-        if (sSoldTo) {
-          aFilters.push(new Filter('SoldToParty', FilterOperator.Contains, sSoldTo));
+        // Sales Order filter
+        const sSalesOrder = this.byId('salesOrderFilter').getValue();
+        if (sSalesOrder) {
+          aFilters.push(new Filter('SalesOrder', FilterOperator.Contains, sSalesOrder));
         }
 
-        // Ship-to filter (sử dụng PurchaseOrderByShipToParty)
-        const sShipTo = this.byId('shipToFilter').getValue();
-        if (sShipTo) {
-          aFilters.push(new Filter('PurchaseOrderByShipToParty', FilterOperator.Contains, sShipTo));
+        // Customer PO filter
+        const sCustomerPO = this.byId('customerPOFilter').getValue();
+        if (sCustomerPO) {
+          aFilters.push(new Filter('PurchaseOrderByCustomer', FilterOperator.Contains, sCustomerPO));
         }
 
-        // PO Number filter
-        const sPONumber = this.byId('poNumberFilter').getValue();
-        if (sPONumber) {
-          aFilters.push(new Filter('PurchaseOrderByCustomer', FilterOperator.Contains, sPONumber));
+        // Ship-to PO filter
+        const sShipToPO = this.byId('shipToPOFilter').getValue();
+        if (sShipToPO) {
+          aFilters.push(new Filter('PurchaseOrderByShipToParty', FilterOperator.Contains, sShipToPO));
+        }
+
+        // Delivery Date filter
+        const oDeliveryDate = this.byId('deliveryDateFilter').getDateValue();
+        if (oDeliveryDate) {
+          // Format date to match OData format (YYYY-MM-DD)
+          const sFormattedDate = oDeliveryDate.toISOString().split('T')[0];
+          aFilters.push(new Filter('RequestedDeliveryDate', FilterOperator.EQ, sFormattedDate));
+        }
+
+        // Status filter
+        const sStatus = this.byId('statusFilter').getSelectedKey();
+        if (sStatus) {
+          aFilters.push(new Filter('Status', FilterOperator.EQ, sStatus));
         }
 
         return aFilters;
@@ -59,9 +73,11 @@ sap.ui.define(
 
       onClearPress: function () {
         // Clear all filters
-        this.byId('soldToFilter').setValue('');
-        this.byId('shipToFilter').setValue('');
-        this.byId('poNumberFilter').setValue('');
+        this.byId('salesOrderFilter').setValue('');
+        this.byId('customerPOFilter').setValue('');
+        this.byId('shipToPOFilter').setValue('');
+        this.byId('deliveryDateFilter').setValue('');
+        this.byId('statusFilter').setSelectedKey('');
 
         // Clear table filters
         const oTable = this.byId('soTable');
@@ -111,14 +127,6 @@ sap.ui.define(
         MessageToast.show('Value help for ' + sProperty);
       },
 
-      onItemPress: function (oEvent) {
-        const oItem = oEvent.getSource();
-        const oContext = oItem.getBindingContext();
-        const sSalesOrder = oContext.getProperty('SalesOrder');
-
-        MessageToast.show('Selected SO: ' + sSalesOrder);
-      },
-
       onCreateSOPress: function () {
         this.getOwnerComponent().getRouter().navTo('create_so');
       },
@@ -162,6 +170,57 @@ sap.ui.define(
 
       onNavBack: function () {
         this.getOwnerComponent().getRouter().navTo('overview');
+      },
+
+      // onItemPress: function (oEvent) {
+      //   const oItem = oEvent.getSource();
+      //   const oContext = oItem.getBindingContext();
+      //   const sSalesOrder = oContext.getProperty('SalesOrder');
+
+      //   MessageToast.show('Selected SO: ' + sSalesOrder);
+      // },
+
+      onSelectionChange: function (oEvent) {
+        const oTable = oEvent.getSource();
+        const aSelectedItems = oTable.getSelectedItems();
+        const oSubmitButton = this.byId('submitButton');
+
+        // Enable/disable submit button based on selection
+        oSubmitButton.setEnabled(aSelectedItems.length > 0);
+      },
+
+      onSubmitPress: function () {
+        const oTable = this.byId('soTable');
+        const aSelectedItems = oTable.getSelectedItems();
+
+        if (aSelectedItems.length === 0) {
+          MessageToast.show('Please select at least one sales order');
+          return;
+        }
+
+        // Get IDs of selected sales orders
+        const aSelectedIds = aSelectedItems.map(function (oItem) {
+          const oContext = oItem.getBindingContext();
+          return oContext.getProperty('ID'); // hoặc 'SalesOrder' tùy API
+        });
+
+        // Show confirmation dialog
+        const sMessage = `Are you sure you want to submit ${aSelectedIds.length} sales order(s)?`;
+
+        MessageBox.confirm(sMessage, {
+          onClose: (oAction) => {
+            if (oAction === MessageBox.Action.OK) {
+              // User confirmed deletion, perform the action
+              this._submitSalesOrders(aSelectedIds);
+            }
+          },
+        });
+      },
+
+      _submitSalesOrders: function (aIds) {
+        // Call API to submit sales orders
+        MessageToast.show(`Submitting ${aIds.length} sales order(s)...`);
+        console.log(aIds);
       },
     });
   }

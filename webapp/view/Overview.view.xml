@@ -1,18 +1,27 @@
 <mvc:View
-  controllerName="com.internal.oof.controller.CreateSO"
+  controllerName="com.internal.oof.controller.Overview"
   xmlns="sap.m"
   xmlns:mvc="sap.ui.core.mvc"
   displayBlock="true"
 >
   <Page title="{i18n>homePageTitle}">
-    <landmarkInfo>
-      <PageAccessibleLandmarkInfo
-        rootRole="Region"
-        rootLabel="{i18n>Overview_rootLabel}"
-        contentRole="Main"
-        contentLabel="{i18n>Overview_contentLabel}"
-        headerRole="Banner"
-        headerLabel="{i18n>Overview_headerLabel}"/>
-    </landmarkInfo>
+    <content>
+      <VBox class="sapUiMediumMargin" alignItems="Center">
+        <Title text="Sales Order Management" level="H2" class="sapUiMediumMarginBottom"/>
+        
+        <HBox class="sapUiMediumMarginTop">
+          <Button text="Create Sales Order" 
+                  press="onCreateSOPress"
+                  type="Emphasized"
+                  icon="sap-icon://add"
+                  class="sapUiMediumMarginEnd"/>
+          
+          <Button text="Sales Order List" 
+                  press="onSOListPress"
+                  type="Default"
+                  icon="sap-icon://table-view"/>
+        </HBox>
+      </VBox>
+    </content>
   </Page>
 </mvc:View>
