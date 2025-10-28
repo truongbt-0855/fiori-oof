@@ -15,7 +15,143 @@ sap.ui.define(
         const oComponent = this.getOwnerComponent();
         const oModel = oComponent.getModel();
         this.getView().setModel(oModel);
-        // Initialize view
+        
+        // Subscribe to detail events
+        const oEventBus = sap.ui.getCore().getEventBus();
+        oEventBus.subscribe("SODetail", "close", this.onDetailClose, this);
+        oEventBus.subscribe("SODetail", "delete", this.onDetailDelete, this);
+      },
+
+      // ...existing code...
+      onItemPress: function (oEvent) {
+        const oItem = oEvent.getSource();
+        const oContext = oItem.getBindingContext();
+        const sSalesOrderId = oContext.getProperty('ID');
+
+        // Get detail controller and load data
+        const oDetailView = this.byId('detailView');
+        const oDetailController = oDetailView.getController();
+        
+        oDetailController.loadDetail(sSalesOrderId);
+        this._showDetailPanel();
+      },
+
+      _showDetailPanel: function () {
+        const oDetailView = this.byId('detailView');
+        const oDetailController = oDetailView.getController();
+        const oSplitter = this.byId('mainSplitter');
+        const aContentAreas = oSplitter.getContentAreas();
+
+        // Adjust layout
+        setTimeout(() => {
+          aContentAreas[0].getLayoutData().setSize('60%');
+          aContentAreas[1].getLayoutData().setSize('40%');
+
+          // Show detail panel
+          oDetailController.showPanel();
+        }, 50);
+      },
+
+      onCloseDetailPress: function () {
+        this._hideDetailPanel();
+      },
+
+      onDetailClose: function() {
+        this._hideDetailPanel();
+      },
+
+      onDetailDelete: function(sChannel, sEventId, oData) {
+        this._deleteSalesOrderById(oData.id);
+      },
+
+      _hideDetailPanel: function () {
+        const oDetailView = this.byId('detailView');
+        const oDetailController = oDetailView.getController();
+        const oSplitter = this.byId('mainSplitter');
+        const aContentAreas = oSplitter.getContentAreas();
+
+        // Hide detail panel
+        oDetailController.hidePanel();
+        
+        // Reset layout after animation
+        setTimeout(() => {
+          aContentAreas[0].getLayoutData().setSize('100%');
+          aContentAreas[1].getLayoutData().setSize('auto');
+        }, 300);
+      },
+
+      _deleteSalesOrderById: function (sId) {
+        // Delete logic here
+        MessageToast.show('Delete functionality will be implemented');
+
+        // Hide detail panel with animation
+        this._hideDetailPanel();
+
+        // Refresh table
+        const oTable = this.byId('soTable');
+        const oBinding = oTable.getBinding('items');
+        if (oBinding) {
+          oBinding.refresh();
+        }
+      },
+
+      _loadSalesOrderDetail: function (sSalesOrderId) {
+        const sUrl = `https://803f6caftrial-dev-oof-backend-srv.cfapps.us10-001.hana.ondemand.com/odata/v4/admin/SalesOrders/${sSalesOrderId}`;
+
+        // Show loading
+        this.byId('detailPanel').setBusy(true);
+
+        fetch(sUrl)
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error('Network response was not ok');
+            }
+            return response.json();
+          })
+          .then((data) => {
+            // Set detail data to model
+            const oDetailModel = this.getView().getModel('detailModel');
+            oDetailModel.setData(data);
+
+            this.byId('detailPanel').setBusy(false);
+            MessageToast.show('Sales Order details loaded');
+          })
+          .catch((error) => {
+            this.byId('detailPanel').setBusy(false);
+            MessageBox.error('Failed to load sales order details: ' + error.message);
+            console.error('Error:', error);
+          });
+      },
+
+      onEditDetailPress: function () {
+        const oDetailModel = this.getView().getModel('detailModel');
+        const sSalesOrder = oDetailModel.getProperty('/SalesOrder');
+        MessageToast.show('Edit functionality for SO ' + sSalesOrder);
+      },
+
+      onDeleteDetailPress: function () {
+        const oDetailModel = this.getView().getModel('detailModel');
+        const sSalesOrder = oDetailModel.getProperty('/SalesOrder');
+        const sId = oDetailModel.getProperty('/ID');
+
+        MessageBox.confirm(`Are you sure you want to delete Sales Order ${sSalesOrder}?`, {
+          onOK: function () {
+            this._deleteSalesOrderById(sId);
+          }.bind(this),
+        });
+      },
+
+      _deleteSalesOrderById: function (sId) {
+        // Delete logic here
+        MessageToast.show('Delete functionality will be implemented');
+
+        // Hide detail panel after delete
+        this.byId('detailPanel').setVisible(false);
+
+        // Reset splitter layout
+        const oSplitter = this.byId('mainSplitter');
+        oSplitter.getContentAreas()[0].getLayoutData().setSize('100%');
+        oSplitter.getContentAreas()[1].getLayoutData().setSize('0%');
       },
 
       onSearchPress: function () {

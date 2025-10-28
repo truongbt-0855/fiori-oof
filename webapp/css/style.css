@@ -70,3 +70,53 @@ html[dir="rtl"] .myAppDemoWT .myCustomButton.sapMBtn {
     margin: 0.5rem;
   }
 }
+
+
+/* Detail Panel Animation */
+.detailPanel {
+    transition: all 0.3s ease-in-out;
+    transform: translateX(100%);
+    opacity: 0;
+}
+
+.detailPanel.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.detailPanel.hide {
+    transform: translateX(100%);
+    opacity: 0;
+}
+
+/* Smooth splitter transition */
+.sapUiLayoutSplitter {
+    transition: all 0.3s ease-in-out;
+}
+
+/* Improved detail panel styling */
+.detailPanel .sapMPanel {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-radius: 8px;
+}
+
+/* Form styling improvements */
+.detailPanel .sapUiFormTitle {
+    font-weight: bold;
+    color: #0073e6;
+    margin-top: 1rem;
+}
+
+/* Status styling */
+.detailPanel .sapMObjectStatus {
+    font-weight: bold;
+}
+
+/* Button styling */
+/* .detailPanel .sapMBtn {
+    min-width: 100px;
+} */
+
+#__panel2 {
+  width: auto !important;
+}

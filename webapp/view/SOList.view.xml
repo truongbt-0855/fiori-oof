@@ -1,167 +1,143 @@
-<!-- filepath: webapp/view/SOList.view.xml -->
 <mvc:View
     controllerName="com.internal.oof.controller.SOList"
     xmlns:mvc="sap.ui.core.mvc"
     xmlns="sap.m"
     xmlns:form="sap.ui.layout.form"
     xmlns:core="sap.ui.core"
+    xmlns:layout="sap.ui.layout"
 >
     
     <Page title="Sales Orders" showNavButton="true" navButtonPress="onNavBack">
         <content>
-            <VBox class="sapUiMediumMargin">
+            <layout:Splitter id="mainSplitter" 
+                           orientation="Horizontal" 
+                           width="100%" 
+                           height="100%">
                 
-                <!-- Filter Panel -->
-                <Panel headerText="Search Filters" expandable="true" expanded="true">
-                    <content>
-                        <VBox class="">
-                            <form:SimpleForm 
-                                layout="ColumnLayout"
-                                editable="true"
-                                maxContainerCols="2"
-                                labelSpanL="3"
-                                labelSpanM="3"
-                                labelSpanS="12"
-                                adjustLabelSpan="false"
-                                emptySpanL="1"
-                                emptySpanM="1"
-                                emptySpanS="0"
-                                columnsL="2"
-                                columnsM="2"
-                                singleContainerFullSize="false">
-                                <form:content>
-                                    
-                                    <Label text="Sales Order:" />
-                                    <Input id="salesOrderFilter" 
-                                        placeholder="Enter sales order number" />
-                                    
-                                    <Label text="Customer PO:" />
-                                    <Input id="customerPOFilter" 
-                                        placeholder="Enter customer PO number" />
-                                    
-                                    <Label text="Ship-to Party:" />
-                                    <Input id="shipToPOFilter" 
-                                        placeholder="Enter ship-to Party" />
-                                    
-                                    <Label text="Delivery Date:" />
-                                    <DatePicker id="deliveryDateFilter" 
-                                            placeholder="Select delivery date"
-                                            displayFormat="dd/MM/yyyy" />
-                                    
-                                    <Label text="Status:" />
-                                    <ComboBox id="statusFilter" 
-                                            placeholder="Select status">
-                                        <core:Item key="" text="All"/>
-                                        <core:Item key="1" text="Draft"/>
-                                        <core:Item key="2" text="Submitted"/>
-                                        <core:Item key="8" text="Error"/>
-                                    </ComboBox>
-                                    
-                                </form:content>
-                            </form:SimpleForm>
-                            
-                            <HBox class="sapUiFormCLContainer">
-                                <Button text="Search" 
-                                       press="onSearchPress" 
-                                       type="Emphasized" 
-                                       class="sapUiMediumMarginEnd" />
-                                <Button text="Clear" 
-                                       press="onClearPress" 
-                                       type="Transparent" />
-                            </HBox>
-                            
-                        </VBox>
-                    </content>
-                </Panel>
-                
-                <!-- Results Table -->
-                <Table id="soTable" 
-                       items="{/SalesOrders}"
-                       mode="MultiSelect"
-                       class="sapUiMediumMarginTop"
-                       growing="true"
-                       growingThreshold="50"
-                       selectionChange="onSelectionChange">
+                <!-- Left Panel - Sales Order List -->
+                <VBox class="sapUiMediumMargin">
+                    <layoutData>
+                        <layout:SplitterLayoutData size="100%" resizable="true" />
+                    </layoutData>
                     
-                    <headerToolbar>
-                        <Toolbar>
-                            <Title text="Sales Orders" level="H2"/>
-                            <ToolbarSpacer />
-                            <Button id="submitButton"
-                                text="Submit" 
-                                press="onSubmitPress" 
-                                type="Emphasized"
-                                icon="sap-icon://accept"
-                                enabled="false" />
-                            <Button text="Create SO" 
-                                press="onCreateSOPress" 
-                                type="Emphasized"
-                                icon="sap-icon://add" />
-                            <Button text="Export" 
-                                press="onExportPress"
-                                icon="sap-icon://excel-attachment" />
-                        </Toolbar>
-                    </headerToolbar>
-                    
-                    <columns>
-                        <Column>
-                            <Text text="Sales Order" />
-                        </Column>
-                        <Column>
-                            <Text text="Sold-to Party" />
-                        </Column>
-                        <Column>
-                            <Text text="Customer PO" />
-                        </Column>
-                        <Column>
-                            <Text text="Ship-to Party" />
-                        </Column>
-                        <Column>
-                            <Text text="Delivery Date" />
-                        </Column>
-                        <Column>
-                            <Text text="Incoterms" />
-                        </Column>
-                        <Column>
-                            <Text text="Status" />
-                        </Column>
-                        <Column>
-                            <Text text="Total Amount" />
-                        </Column>
-                        <Column>
-                            <Text text="Actions" />
-                        </Column>
-                    </columns>
-                    
-                    <items>
-                        <ColumnListItem type="Navigation">
-                            <cells>
-                                <Text text="{SalesOrder}" />
-                                <Text text="{SoldToParty}" />
-                                <Text text="{PurchaseOrderByCustomer}" />
-                                <Text text="{PurchaseOrderByShipToParty}" />
-                                <Text text="{RequestedDeliveryDate}" />
-                                <Text text="{IncotermsClassification}" />
-                                <ObjectStatus text="{path: 'Status', formatter: 'formatStatus'}" 
-                                            state="{path: 'Status', formatter: 'formatStatusState'}" />
-                                <Text text="{parts: ['TotalNetAmount', 'TransactionCurrency'], formatter: 'formatCurrency'}" />
+                    <!-- Filter Panel -->
+                    <Panel headerText="Search Filters" expandable="true" expanded="true">
+                        <content>
+                            <VBox class="">
+                                <form:SimpleForm 
+                                    layout="ResponsiveGridLayout"
+                                    editable="true"
+                                    maxContainerCols="2"
+                                    labelSpanL="3"
+                                    labelSpanM="3"
+                                    labelSpanS="12"
+                                    columnsL="2"
+                                    columnsM="2">
+                                    <form:content>
+                                        
+                                        <Label text="Sales Order:" />
+                                        <Input id="salesOrderFilter" 
+                                              placeholder="Enter sales order number" />
+                                        
+                                        <Label text="Customer PO:" />
+                                        <Input id="customerPOFilter" 
+                                              placeholder="Enter customer PO number" />
+                                        
+                                        <Label text="Ship-to PO:" />
+                                        <Input id="shipToPOFilter" 
+                                              placeholder="Enter ship-to PO number" />
+                                        
+                                        <Label text="Delivery Date:" />
+                                        <DatePicker id="deliveryDateFilter" 
+                                                   placeholder="Select delivery date"
+                                                   displayFormat="dd/MM/yyyy" />
+                                        
+                                        <Label text="Status:" />
+                                        <ComboBox id="statusFilter" 
+                                                 placeholder="Select status">
+                                            <core:Item key="" text="All"/>
+                                            <core:Item key="1" text="Draft"/>
+                                            <core:Item key="2" text="Submitted"/>
+                                            <core:Item key="8" text="Error"/>
+                                        </ComboBox>
+                                        
+                                    </form:content>
+                                </form:SimpleForm>
                                 
-                                <HBox>
-                                    <Button icon="sap-icon://edit" 
-                                           press="onEditPress"
-                                           type="Transparent"
-                                           tooltip="Edit" />
-                                    <Button icon="sap-icon://delete" 
-                                           press="onDeletePress"
-                                           type="Transparent"
-                                           tooltip="Delete" />
+                                <HBox class="sapUiMediumMarginTop">
+                                    <Button text="Search" 
+                                           press="onSearchPress" 
+                                           type="Emphasized" 
+                                           class="sapUiMediumMarginEnd" />
+                                    <Button text="Clear" 
+                                           press="onClearPress" 
+                                           type="Transparent" />
                                 </HBox>
-                            </cells>
-                        </ColumnListItem>
-                    </items>
-                </Table>
+                            </VBox>
+                        </content>
+                    </Panel>
+                    
+                    <!-- Results Table -->
+                    <Table id="soTable" 
+                           items="{/SalesOrders}"
+                           mode="MultiSelect"
+                           class="sapUiMediumMarginTop"
+                           growing="true"
+                           growingThreshold="50"
+                           selectionChange="onSelectionChange">
+                        
+                        <headerToolbar>
+                            <Toolbar>
+                                <Title text="Sales Orders" level="H2"/>
+                                <ToolbarSpacer />
+                                <Button id="submitButton"
+                                       text="Submit" 
+                                       press="onSubmitPress" 
+                                       type="Emphasized"
+                                       icon="sap-icon://accept"
+                                       enabled="false"
+                                       class="sapUiMediumMarginEnd" />
+                                <Button text="Create SO" 
+                                       press="onCreateSOPress" 
+                                       type="Default"
+                                       icon="sap-icon://add" 
+                                       class="sapUiMediumMarginEnd" />
+                                <Button text="Export" 
+                                       press="onExportPress"
+                                       icon="sap-icon://excel-attachment" />
+                            </Toolbar>
+                        </headerToolbar>
+                        
+                        <columns>
+                            <Column><Text text="Sales Order" /></Column>
+                            <Column><Text text="Sold-to Party" /></Column>
+                            <Column><Text text="Customer PO" /></Column>
+                            <Column><Text text="Status" /></Column>
+                            <Column><Text text="Total Amount" /></Column>
+                        </columns>
+                        
+                        <items>
+                            <ColumnListItem press="onItemPress" type="Navigation">
+                                <cells>
+                                    <Text text="{SalesOrder}" />
+                                    <Text text="{SoldToParty}" />
+                                    <Text text="{PurchaseOrderByCustomer}" />
+                                    <ObjectStatus text="{path: 'Status', formatter: '.formatStatus'}" 
+                                                state="{path: 'Status', formatter: '.formatStatusState'}" />
+                                    <ObjectNumber number="{TotalNetAmount}" 
+                                                unit="{TransactionCurrency}"
+                                                emphasized="false" />
+                                </cells>
+                            </ColumnListItem>
+                        </items>
+                    </Table>
+                    
+                </VBox>
                 
-            </VBox>
+                <!-- Right Panel - Sales Order Detail -->
+                <mvc:XMLView viewName="com.internal.oof.view.SODetail" id="detailView" />
+                
+            </layout:Splitter>
         </content>
     </Page>
 </mvc:View>

@@ -1,0 +1,126 @@
+<mvc:View
+    controllerName="com.internal.oof.controller.SODetail"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:form="sap.ui.layout.form"
+    xmlns:core="sap.ui.core"
+    xmlns:layout="sap.ui.layout"
+>
+    <VBox id="detailPanel" 
+          class="detailPanel" 
+          visible="false">
+        <layoutData>
+            <layout:SplitterLayoutData size="auto" resizable="true" />
+        </layoutData>
+        
+        <Panel headerText="{detailModel>/SalesOrder} - Sales Order Details" 
+               class="sapUiResponsiveMargin">
+            <headerToolbar>
+                <Toolbar>
+                    <Title text="Sales Order Details" level="H3"/>
+                    <ToolbarSpacer />
+                    <Button icon="sap-icon://decline" 
+                           press="onCloseDetailPress"
+                           type="Transparent"
+                           tooltip="Close Details" />
+                </Toolbar>
+            </headerToolbar>
+            
+            <content>
+                <VBox class="">
+                    
+                    <!-- Status Header -->
+                    <HBox class="sapUiMediumMarginBottom" alignItems="Center">
+                        <ObjectStatus id="detailStatus" 
+                                    text="{path: 'detailModel>/Status', formatter: '.formatStatus'}" 
+                                    state="{path: 'detailModel>/Status', formatter: '.formatStatusState'}"
+                                    class="sapUiMediumMarginEnd" />
+                        <ObjectNumber id="detailAmount" 
+                                    number="{detailModel>/TotalNetAmount}" 
+                                    unit="{detailModel>/TransactionCurrency}"
+                                    emphasized="true" />
+                    </HBox>
+                    
+                    <!-- Main Info -->
+                    <form:SimpleForm 
+                        layout="ResponsiveGridLayout"
+                        editable="false"
+                        maxContainerCols="1"
+                        labelSpanL="4"
+                        labelSpanM="4"
+                        labelSpanS="12"
+                        emptySpanL="1"
+                        emptySpanM="1"
+                        columnsL="1"
+                        columnsM="1"
+                        class="sapUiMediumMarginBottom">
+                        <form:content>
+                            
+                            <Title text="Order Information" />
+                            
+                            <Label text="Sales Order:" />
+                            <Text text="{detailModel>/SalesOrder}" class="" />
+                            
+                            <Label text="Sales Organization:" />
+                            <Text text="{detailModel>/SalesOrganization}" class="" />
+                            
+                            <Label text="Order Date:" />
+                            <Text text="{path: 'detailModel>/SalesOrderDate', type: 'sap.ui.model.odata.type.Date'}" 
+                                  class="" />
+                            
+                            <Title text="Customer Information" />
+                            
+                            <Label text="Sold-to Party:" />
+                            <Text text="{detailModel>/SoldToParty}" class="" />
+                            
+                            <Label text="Customer PO:" />
+                            <Text text="{detailModel>/PurchaseOrderByCustomer}" class="" />
+                            
+                            <Label text="Ship-to PO:" />
+                            <Text text="{detailModel>/PurchaseOrderByShipToParty}" class="" />
+                            
+                            <Title text="Delivery Information" />
+                            
+                            <Label text="Requested Delivery Date:" />
+                            <Text text="{path: 'detailModel>/RequestedDeliveryDate', type: 'sap.ui.model.odata.type.Date'}" 
+                                  class="" />
+                            
+                            <Label text="Incoterms:" />
+                            <Text text="{detailModel>/IncotermsClassification}" class="" />
+                            
+                            <Label text="Payment Method:" />
+                            <Text text="{detailModel>/PaymentMethod}" class="" />
+                            
+                        </form:content>
+                    </form:SimpleForm>
+                    
+                    <!-- Error Message if exists -->
+                    <Panel headerText="Error Details" 
+                           visible="{= !!${detailModel>/Error}}"
+                           class="sapUiMediumMarginTop">
+                        <content>
+                            <MessageStrip text="{detailModel>/Error}" 
+                                        type="Error" 
+                                        class="sapUiMediumMargin" />
+                        </content>
+                    </Panel>
+                    
+                    <!-- Action Buttons -->
+                    <HBox class="sapUiMediumMarginTop" justifyContent="End">
+                        <Button text="Edit" 
+                               press="onEditDetailPress" 
+                               type="Emphasized"
+                               icon="sap-icon://edit"
+                               class="sapUiMediumMarginEnd" />
+                        <Button text="Delete" 
+                               press="onDeleteDetailPress" 
+                               type="Reject"
+                               icon="sap-icon://delete" />
+                    </HBox>
+                    
+                </VBox>
+            </content>
+        </Panel>
+        
+    </VBox>
+</mvc:View>
