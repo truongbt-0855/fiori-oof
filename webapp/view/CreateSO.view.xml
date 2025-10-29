@@ -7,9 +7,9 @@
   xmlns:unified="sap.ui.unified"
   displayBlock="true"
 >
-  <Page title="{i18n>createSalesOrderTitle}" showNavButton="true" navButtonPress="onPageCreateSONavButtonPress">
+  <Page title="{i18n>createSalesOrderTitle}" showNavButton="true" navButtonPress="onPageCreateSONavButtonPress" class="sapUiContentPadding">
     <content>
-      <f:SimpleForm
+        <f:SimpleForm
         id="idCreateSOSimpleForm"
         layout="ResponsiveGridLayout"
         editable="true"
@@ -26,7 +26,7 @@
         columnsL="1"
         columnsM="1"
         singleContainerFullSize="false"
-        class="sapUiResponsiveMargin"
+        class=""
       >
         <f:content>
           <!-- Header Information Section -->
@@ -46,7 +46,7 @@
           >
             <core:Item key="{customerID}" text="{customerID} - {customerName}" />
           </ComboBox>
-
+          
           <!-- Ship-to Customer -->
           <Label text="{i18n>shipToLabel}" required="true" />
           <ComboBox
@@ -107,7 +107,6 @@
           
         </f:content>
       </f:SimpleForm>
-
       <!-- Line Items Table -->
       <Table
         id="idLineItemsTable"
@@ -115,7 +114,6 @@
         growing="true"
         growingThreshold="20"
         mode="SingleSelect"
-        class="sapUiResponsiveMargin"
       >
         <headerToolbar>
           <OverflowToolbar>
@@ -250,7 +248,7 @@
         headerText="{i18n>attachmentsSectionTitle}"
         expandable="true"
         expanded="false"
-        class="sapUiResponsiveMargin"
+        class="sapUiSmallMarginTop"
       >
         <content>
           <VBox class="sapUiMediumMargin">
@@ -299,7 +297,7 @@
       <Panel
         id="idOrderSummaryPanel"
         headerText="{i18n>orderSummaryTitle}"
-        class="sapUiResponsiveMargin"
+        class="sapUiSmallMarginTop"
       >
         <content>
           <f:SimpleForm
