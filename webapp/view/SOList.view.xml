@@ -35,24 +35,24 @@
                                     columnsM="2">
                                     <form:content>
                                         
-                                        <Label text="Sales Order:" />
+                                        <Label text="Sales Order" />
                                         <Input id="salesOrderFilter" 
                                               placeholder="Enter sales order number" />
                                         
-                                        <Label text="Customer PO:" />
+                                        <Label text="Customer PO" />
                                         <Input id="customerPOFilter" 
                                               placeholder="Enter customer PO number" />
                                         
-                                        <Label text="Ship-to PO:" />
+                                        <Label text="Ship-to PO" />
                                         <Input id="shipToPOFilter" 
                                               placeholder="Enter ship-to PO number" />
                                         
-                                        <Label text="Delivery Date:" />
+                                        <Label text="Delivery Date" />
                                         <DatePicker id="deliveryDateFilter" 
                                                    placeholder="Select delivery date"
                                                    displayFormat="dd/MM/yyyy" />
                                         
-                                        <Label text="Status:" />
+                                        <Label text="Status" />
                                         <ComboBox id="statusFilter" 
                                                  placeholder="Select status">
                                             <core:Item key="" text="All"/>

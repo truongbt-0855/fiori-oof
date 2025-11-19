@@ -337,27 +337,186 @@ sap.ui.define(
         // Get IDs of selected sales orders
         const aSelectedIds = aSelectedItems.map(function (oItem) {
           const oContext = oItem.getBindingContext();
-          return oContext.getProperty('ID'); // hoặc 'SalesOrder' tùy API
+          return oContext.getProperty('ID');
         });
 
-        // Show confirmation dialog
-        const sMessage = `Are you sure you want to submit ${aSelectedIds.length} sales order(s)?`;
+        // Show detailed confirmation
+        const sMessage = `Submit ${aSelectedIds.length} sales order(s) for approval?\n\nThis action cannot be undone.`;
 
         MessageBox.confirm(sMessage, {
+          title: "Confirm Submission",
           onClose: (oAction) => {
             if (oAction === MessageBox.Action.OK) {
-              // User confirmed deletion, perform the action
               this._submitSalesOrders(aSelectedIds);
             }
           },
+          styleClass: "sapUiSizeCompact"
         });
       },
 
       _submitSalesOrders: function (aIds) {
-        // Call API to submit sales orders
-        MessageToast.show(`Submitting ${aIds.length} sales order(s)...`);
-        console.log(aIds);
+        // Show loading
+        const oTable = this.byId('soTable');
+        oTable.setBusy(true);
+        
+        // Prepare payload
+        const oPayload = {
+            order_ids: aIds
+        };
+        
+        // API URL
+        const sUrl = "https://803f6caftrial-dev-oof-backend-srv.cfapps.us10-001.hana.ondemand.com/odata/v4/admin/sendToApproval";
+        
+        // Call API
+        jQuery.ajax({
+            url: sUrl,
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(oPayload),
+            success: (oData) => {
+                oTable.setBusy(false);
+                
+                // Handle success response
+                if (oData.success) {
+                    // All orders submitted successfully
+                    MessageToast.show(`Successfully submitted ${aIds.length} sales order(s) for approval`);
+                    
+                    // Clear selection
+                    oTable.removeSelections();
+                    this.byId('submitButton').setEnabled(false);
+                    
+                    // Refresh table to reflect updated status
+                    this._refreshTable();
+                    
+                    console.log("Submit success:", oData);
+                } else {
+                    // Unexpected response format
+                    MessageBox.warning("Unexpected response from server: " + JSON.stringify(oData));
+                }
+            },
+            error: (xhr, status, error) => {
+                oTable.setBusy(false);
+                
+                // Parse error response
+                let sErrorMessage = "Failed to submit sales orders";
+                let aErrorDetails = [];
+                
+                try {
+                    const oErrorResponse = JSON.parse(xhr.responseText);
+                    
+                    if (oErrorResponse.error) {
+                        const oError = oErrorResponse.error;
+                        
+                        // Check for multiple errors
+                        if (oError.details && Array.isArray(oError.details)) {
+                            // Multiple errors scenario
+                            sErrorMessage = `Multiple errors occurred while submitting sales orders:`;
+                            aErrorDetails = oError.details.map(detail => detail.message);
+                            
+                            this._showMultipleErrorsDialog(sErrorMessage, aErrorDetails);
+                            
+                        } else {
+                            // Single error scenario
+                            sErrorMessage = oError.message || "Failed to submit sales orders";
+                            
+                            MessageBox.error(`Failed to submit sales orders: ${sErrorMessage}`);
+                        }
+                    } else {
+                        // Generic error
+                        sErrorMessage = `Error ${xhr.status}: ${error}`;
+                        MessageBox.error(`Failed to submit sales orders: ${sErrorMessage}`);
+                    }
+                    
+                } catch (e) {
+                    // JSON parsing failed
+                    sErrorMessage = `Error ${xhr.status}: ${error}`;
+                    MessageBox.error(`Failed to submit sales orders: ${sErrorMessage}`);
+                }
+                
+                console.error("Submit error:", {
+                    status: xhr.status,
+                    statusText: xhr.statusText,
+                    responseText: xhr.responseText,
+                    error: error,
+                    parsedErrors: aErrorDetails
+                });
+            }
+        });
       },
+
+      _showMultipleErrorsDialog: function(sMainMessage, aErrorDetails) {
+        // Create detailed error message
+        let sDetailedMessage = sMainMessage + "\n\n";
+        aErrorDetails.forEach((sError, index) => {
+            sDetailedMessage += `${index + 1}. ${sError}\n`;
+        });
+        
+        // Show error dialog with details
+        MessageBox.error(sDetailedMessage, {
+            title: "Submission Errors",
+            // details: aErrorDetails.join("\n"),
+            styleClass: "sapUiSizeCompact"
+        });
+      },
+
+      _refreshTable: function() {
+        // Refresh table data
+        const oTable = this.byId('soTable');
+        const oBinding = oTable.getBinding('items');
+        
+        if (oBinding) {
+            oBinding.refresh();
+            MessageToast.show("Table refreshed");
+        }
+      },
+
+      _analyzeSubmissionResults: function(oResponse, aOriginalIds) {
+        // If success response, all IDs were successful
+        if (oResponse.success) {
+            return {
+                successCount: aOriginalIds.length,
+                failedCount: 0,
+                successIds: aOriginalIds,
+                failedIds: []
+            };
+        }
+        
+        // For error responses, extract failed IDs from error messages
+        const aFailedIds = [];
+        const aSuccessIds = [];
+        
+        if (oResponse.error && oResponse.error.details) {
+            // Multiple errors - extract IDs from error messages
+            oResponse.error.details.forEach(detail => {
+                const sMessage = detail.message;
+                // Extract ID from message like "Can't found Sales Order with ID 1231231"
+                const sMatch = sMessage.match(/ID\s+([a-zA-Z0-9\-]+)/);
+                if (sMatch && sMatch[1]) {
+                    aFailedIds.push(sMatch[1]);
+                }
+            });
+        } else if (oResponse.error && oResponse.error.message) {
+            // Single error - extract ID
+            const sMatch = oResponse.error.message.match(/ID\s+([a-zA-Z0-9\-]+)/);
+            if (sMatch && sMatch[1]) {
+                aFailedIds.push(sMatch[1]);
+            }
+        }
+        
+        // Determine successful IDs (those not in failed list)
+        aOriginalIds.forEach(sId => {
+            if (!aFailedIds.includes(sId)) {
+                aSuccessIds.push(sId);
+            }
+        });
+        
+        return {
+            successCount: aSuccessIds.length,
+            failedCount: aFailedIds.length,
+            successIds: aSuccessIds,
+            failedIds: aFailedIds
+        };
+      }
     });
   }
 );

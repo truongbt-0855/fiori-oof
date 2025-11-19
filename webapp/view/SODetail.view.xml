@@ -58,37 +58,37 @@
                             
                             <Title text="Order Information" />
                             
-                            <Label text="Sales Order:" />
+                            <Label text="Sales Order" />
                             <Text text="{detailModel>/SalesOrder}" class="" />
                             
-                            <Label text="Sales Organization:" />
+                            <Label text="Sales Organization" />
                             <Text text="{detailModel>/SalesOrganization}" class="" />
                             
-                            <Label text="Order Date:" />
+                            <Label text="Order Date" />
                             <Text text="{path: 'detailModel>/SalesOrderDate', type: 'sap.ui.model.odata.type.Date'}" 
                                   class="" />
                             
                             <Title text="Customer Information" />
                             
-                            <Label text="Sold-to Party:" />
+                            <Label text="Sold-to Party" />
                             <Text text="{detailModel>/SoldToParty}" class="" />
                             
-                            <Label text="Customer PO:" />
+                            <Label text="Customer PO" />
                             <Text text="{detailModel>/PurchaseOrderByCustomer}" class="" />
                             
-                            <Label text="Ship-to PO:" />
+                            <Label text="Ship-to PO" />
                             <Text text="{detailModel>/PurchaseOrderByShipToParty}" class="" />
                             
                             <Title text="Delivery Information" />
                             
-                            <Label text="Requested Delivery Date:" />
+                            <Label text="Requested Delivery Date" />
                             <Text text="{path: 'detailModel>/RequestedDeliveryDate', type: 'sap.ui.model.odata.type.Date'}" 
                                   class="" />
                             
-                            <Label text="Incoterms:" />
+                            <Label text="Incoterms" />
                             <Text text="{detailModel>/IncotermsClassification}" class="" />
                             
-                            <Label text="Payment Method:" />
+                            <Label text="Payment Method" />
                             <Text text="{detailModel>/PaymentMethod}" class="" />
                             
                         </form:content>
