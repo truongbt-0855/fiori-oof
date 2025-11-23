@@ -32,19 +32,21 @@
           <!-- Header Information Section -->
           <core:Title text="{i18n>headerSectionTitle}" />
           
-          <!-- Sold-to Customer -->
+           <!-- Sold-to Customer -->
           <Label text="{i18n>soldToLabel}" required="true" />
           <ComboBox
             id="idSoldToComboBox"
             placeholder="{i18n>soldToPlaceholder}"
-            selectedKey="{/soldToCustomer}"
-            items="{/customers}"
+            selectedKey="{/soldToParty}"
+            items="{/soldToPartyList}"
             valueState="{/soldToState}"
             valueStateText="{/soldToStateText}"
             selectionChange="onSoldToComboBoxSelectionChange"
+            loadItems="onSoldToComboBoxOpen"
+            showSecondaryValues="true"
             required="true"
           >
-            <core:Item key="{customerID}" text="{customerID} - {customerName}" />
+            <core:Item key="{name}" text="{name} - {description}" />
           </ComboBox>
           
           <!-- Ship-to Customer -->
@@ -52,14 +54,16 @@
           <ComboBox
             id="idShipToComboBox"
             placeholder="{i18n>shipToPlaceholder}"
-            selectedKey="{/shipToCustomer}"
-            items="{/customers}"
+            selectedKey="{/shipToParty}"
+            items="{/shipToPartyList}"
             valueState="{/shipToState}"
             valueStateText="{/shipToStateText}"
             selectionChange="onShipToComboBoxSelectionChange"
+            loadItems="onShipToComboBoxOpen"
+            showSecondaryValues="true"
             required="true"
           >
-            <core:Item key="{customerID}" text="{customerID} - {customerName}" />
+            <core:Item key="{name}" text="{name} - {description}" />
           </ComboBox>
 
           <!-- PO Number -->
@@ -96,10 +100,11 @@
             items="{/incotermsList}"
             valueState="{/incotermsState}"
             valueStateText="{/incotermsStateText}"
-            selectionChange="onIncotermsComboBoxSelectionChange"
+            loadItems="onIncotermsComboBoxOpen"
+            showSecondaryValues="true"
             required="true"
           >
-            <core:Item key="{code}" text="{code} - {description}" />
+            <core:Item key="{name}" text="{name} - {description}" />
           </ComboBox>
 
           <!-- Line Items Section -->

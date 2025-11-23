@@ -23,7 +23,6 @@ sap.ui.define([
       
       // Initialize customer data (mock data for demo)
       this._loadCustomers();
-      
       // Set minimum delivery date to today
       this._setMinimumDeliveryDate();
     },
@@ -31,8 +30,9 @@ sap.ui.define([
     _initializeModel: function() {
       const oModel = new JSONModel({
         // Header Information
-        soldToCustomer: "",
-        shipToCustomer: "",
+        soldToParty: "",
+        shipToParty: "",
+        soldToPartyList: [],
         poNumber: "",
         requestDeliveryDate: "",
         incoterms: "",
@@ -90,29 +90,12 @@ sap.ui.define([
       oModel.setProperty("/customers", aCustomers);
       
       // Auto-select first customer for sold-to
-      oModel.setProperty("/soldToCustomer", aCustomers[0].customerID);
-      oModel.setProperty("/shipToCustomer", aCustomers[0].customerID);
+      oModel.setProperty("/soldToParty", aCustomers[0].customerID);
+      oModel.setProperty("/shipToParty", aCustomers[0].customerID);
       
       // Load other master data
-      this._loadIncoterms();
       this._loadUoM();
       this._loadPlants();
-    },
-
-    _loadIncoterms: function() {
-      // Mock Incoterms data based on customer master
-      const aIncoterms = [
-        { code: "FOB", description: "Free on Board" },
-        { code: "CIF", description: "Cost, Insurance & Freight" },
-        { code: "EXW", description: "Ex Works" },
-        { code: "DDP", description: "Delivered Duty Paid" },
-        { code: "CPT", description: "Carriage Paid To" }
-      ];
-      
-      const oModel = this.getView().getModel();
-      oModel.setProperty("/incotermsList", aIncoterms);
-      // Set default Incoterms
-      oModel.setProperty("/incoterms", aIncoterms[0].code);
     },
 
     _loadUoM: function() {
@@ -156,7 +139,7 @@ sap.ui.define([
       const sSelectedKey = oEvent.getParameter("selectedItem").getKey();
       const oModel = this.getView().getModel();
       
-      oModel.setProperty("/soldToCustomer", sSelectedKey);
+      oModel.setProperty("/soldToParty", sSelectedKey);
       oModel.setProperty("/soldToState", ValueState.None);
       oModel.setProperty("/soldToStateText", "");
       
@@ -168,13 +151,13 @@ sap.ui.define([
       const sSelectedKey = oEvent.getParameter("selectedItem").getKey();
       const oModel = this.getView().getModel();
       
-      oModel.setProperty("/soldToCustomer", sSelectedKey);
+      oModel.setProperty("/soldToParty", sSelectedKey);
       oModel.setProperty("/soldToState", ValueState.None);
       oModel.setProperty("/soldToStateText", "");
       
       // Auto-populate ship-to with sold-to if empty
-      if (!oModel.getProperty("/shipToCustomer")) {
-        oModel.setProperty("/shipToCustomer", sSelectedKey);
+      if (!oModel.getProperty("/shipToParty")) {
+        oModel.setProperty("/shipToParty", sSelectedKey);
       }
       
       // Load default Incoterms for this customer
@@ -185,10 +168,12 @@ sap.ui.define([
     },
 
     onShipToComboBoxSelectionChange: function(oEvent) {
+      console.log('onShipToComboBoxSelectionChange');
+      
       const sSelectedKey = oEvent.getParameter("selectedItem").getKey();
       const oModel = this.getView().getModel();
       
-      oModel.setProperty("/shipToCustomer", sSelectedKey);
+      oModel.setProperty("/shipToParty", sSelectedKey);
       oModel.setProperty("/shipToState", ValueState.None);
       oModel.setProperty("/shipToStateText", "");
       
@@ -518,12 +503,12 @@ sap.ui.define([
     },
 
     _processMaterialData: function(oData) {
-      if (!oData || !oData.value) {
+      if (!oData || !oData.products) {
         throw new Error("Invalid API response");
       }
       
       // Transform API data to UI model format
-      const aMaterials = oData.value.map(item => ({
+      const aMaterials = oData.products.map(item => ({
         materialID: item.name,
         materialDescription: item.description,
         unitPrice: Math.floor(Math.random() * 1000) + 50, // Random price vì API không có
@@ -800,7 +785,7 @@ sap.ui.define([
 
     _validateSoldTo: function() {
       const oModel = this.getView().getModel();
-      const sSoldTo = oModel.getProperty("/soldToCustomer");
+      const sSoldTo = oModel.getProperty("/soldToParty");
       
       if (!sSoldTo) {
         oModel.setProperty("/soldToState", ValueState.Error);
@@ -815,7 +800,7 @@ sap.ui.define([
 
     _validateShipTo: function() {
       const oModel = this.getView().getModel();
-      const sShipTo = oModel.getProperty("/shipToCustomer");
+      const sShipTo = oModel.getProperty("/shipToParty");
       
       if (!sShipTo) {
         oModel.setProperty("/shipToState", ValueState.Error);
@@ -1020,8 +1005,8 @@ sap.ui.define([
       // Prepare sales order data for S/4HANA
       const oSalesOrderData = {
         header: {
-          soldToCustomer: oData.soldToCustomer,
-          shipToCustomer: oData.shipToCustomer,
+          soldToParty: oData.soldToParty,
+          shipToParty: oData.shipToParty,
           poNumber: oData.poNumber,
           requestDeliveryDate: oData.requestDeliveryDate,
           incoterms: oData.incoterms,
@@ -1048,8 +1033,8 @@ sap.ui.define([
       
       MessageBox.success(
         "Sales Order created successfully!\n\n" +
-        "Sold-to: " + oData.soldToCustomer + "\n" +
-        "Ship-to: " + oData.shipToCustomer + "\n" +
+        "Sold-to: " + oData.soldToParty + "\n" +
+        "Ship-to: " + oData.shipToParty + "\n" +
         "PO Number: " + oData.poNumber + "\n" +
         "Line Items: " + oData.lineItems.length + "\n" +
         "Total Amount: " + oData.totalAmount + " " + oData.currency + "\n" +
@@ -1060,6 +1045,192 @@ sap.ui.define([
           }.bind(this)
         }
       );
-    }
+    },
+
+    onSoldToComboBoxOpen: function() {
+      const oModel = this.getView().getModel();
+      const aSoldToPartyList = oModel.getProperty("/soldToPartyList") || [];
+      
+      // Only load data if list is empty (not loaded yet)
+      if (aSoldToPartyList.length === 0) {
+        const oComboBox = this.byId("idSoldToComboBox");
+        oComboBox.close();
+        
+        // Show loading after a short delay to ensure ComboBox closes
+        setTimeout(() => {
+          this.getView().setBusyIndicatorDelay(0);
+          this.getView().setBusy(true);
+          this._loadSoldToPartyData();
+        }, 50);
+      }
+    },
+
+    _loadSoldToPartyData: function() {
+      const sUrl = "https://803f6caftrial-dev-oof-backend-srv.cfapps.us10-001.hana.ondemand.com/odata/v4/sold-to-party/loadSoldToParty";
+      const oModel = this.getView().getModel();
+      
+      fetch(sUrl)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          // Set sold-to party data to model
+          if (data && data.soldToParty) {
+            oModel.setProperty("/soldToPartyList", data.soldToParty);
+            
+            // Auto-select first item if available and none selected
+            const currentSelection = oModel.getProperty("/soldToParty");
+            if (!currentSelection && data.soldToParty.length > 0) {
+              oModel.setProperty("/soldToParty", data.soldToParty[0].name);
+            }
+          } else {
+            oModel.setProperty("/soldToPartyList", []);
+          }
+          
+          // Hide loading
+          this.getView().setBusy(false);
+          MessageToast.show("Sold-to Party data loaded successfully");
+          
+          // Open ComboBox again after loading
+          const oComboBox = this.byId("idSoldToComboBox");
+          oComboBox.open();
+        })
+        .catch(error => {
+          // Hide loading
+          this.getView().setBusy(false);
+          MessageBox.error("Failed to load Sold-to Party data: " + error.message);
+          console.error("Error loading sold-to party data:", error);
+          
+          // Set empty array as fallback
+          oModel.setProperty("/soldToPartyList", []);
+        });
+    },
+
+    onShipToComboBoxOpen: function() {
+      const oModel = this.getView().getModel();
+      const aShipToPartyList = oModel.getProperty("/shipToPartyList") || [];
+      
+      // Only load data if list is empty (not loaded yet)
+      if (aShipToPartyList.length === 0) {
+        const oComboBox = this.byId("idShipToComboBox");
+        oComboBox.close();
+        
+        // Show loading after a short delay to ensure ComboBox closes
+        setTimeout(() => {
+          this.getView().setBusyIndicatorDelay(0);
+          this.getView().setBusy(true);
+          this._loadShipToPartyData();
+        }, 50);
+      }
+    },
+
+    _loadShipToPartyData: function() {
+      const sUrl = "https://803f6caftrial-dev-oof-backend-srv.cfapps.us10-001.hana.ondemand.com/odata/v4/ship-to-party/loadShipToParty";
+      const oModel = this.getView().getModel();
+      
+      fetch(sUrl)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          // Set ship-to party data to model
+          if (data && data.shipToParty) {
+            oModel.setProperty("/shipToPartyList", data.shipToParty);
+            
+            // Auto-select first item if available and none selected
+            const currentSelection = oModel.getProperty("/shipToParty");
+            if (!currentSelection && data.shipToParty.length > 0) {
+              oModel.setProperty("/shipToParty", data.shipToParty[0].name);
+            }
+          } else {
+            oModel.setProperty("/shipToPartyList", []);
+          }
+          
+          // Hide loading
+          this.getView().setBusy(false);
+          MessageToast.show("Ship-to Party data loaded successfully");
+          
+          // Open ComboBox again after loading
+          const oComboBox = this.byId("idShipToComboBox");
+          oComboBox.open();
+        })
+        .catch(error => {
+          // Hide loading
+          this.getView().setBusy(false);
+          MessageBox.error("Failed to load Ship-to Party data: " + error.message);
+          console.error("Error loading ship-to party data:", error);
+          
+          // Set empty array as fallback
+          oModel.setProperty("/shipToPartyList", []);
+        });
+    },
+
+    onIncotermsComboBoxOpen: function() {
+      const oModel = this.getView().getModel();
+      const aIncotermsList = oModel.getProperty("/incotermsList") || [];
+      
+      // Only load data if list is empty (not loaded yet)
+      if (aIncotermsList.length === 0) {
+        const oComboBox = this.byId("idIncotermsComboBox");
+        oComboBox.close();
+        // Show loading after a short delay to ensure ComboBox closes
+        setTimeout(() => {
+          this.getView().setBusyIndicatorDelay(0);
+          this.getView().setBusy(true);
+          this._loadIncotermsData();
+        }, 50);
+      }
+    },
+
+    _loadIncotermsData: function() {
+      const sUrl = "https://803f6caftrial-dev-oof-backend-srv.cfapps.us10-001.hana.ondemand.com/odata/v4/incoterms-classification/loadIncotermsClassification";
+      const oModel = this.getView().getModel();
+      
+      fetch(sUrl)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          // Set incoterms data to model
+          if (data && data.incoterms) {
+            oModel.setProperty("/incotermsList", data.incoterms);
+            
+            // Auto-select first item if available and none selected
+            const currentSelection = oModel.getProperty("/incoterms");
+            if (!currentSelection && data.incoterms.length > 0) {
+              oModel.setProperty("/incoterms", data.incoterms[0].name);
+            }
+          } else {
+            oModel.setProperty("/incotermsList", []);
+          }
+          
+          // Hide loading
+          this.getView().setBusy(false);
+          MessageToast.show("Incoterms data loaded successfully");
+          
+          // Open ComboBox again after loading
+          const oComboBox = this.byId("idIncotermsComboBox");
+          oComboBox.open();
+        })
+        .catch(error => {
+          // Hide loading
+          this.getView().setBusy(false);
+          MessageBox.error("Failed to load Incoterms data: " + error.message);
+          console.error("Error loading incoterms data:", error);
+          
+          // Set empty array as fallback
+          oModel.setProperty("/incotermsList", []);
+        });
+    },
+
   });
 });
