@@ -146,12 +146,14 @@ sap.ui.define(
         MessageToast.show('Delete functionality will be implemented');
 
         // Hide detail panel after delete
-        this.byId('detailPanel').setVisible(false);
+        this._hideDetailPanel();
 
-        // Reset splitter layout
-        const oSplitter = this.byId('mainSplitter');
-        oSplitter.getContentAreas()[0].getLayoutData().setSize('100%');
-        oSplitter.getContentAreas()[1].getLayoutData().setSize('0%');
+        // Refresh table
+        const oTable = this.byId('soTable');
+        const oBinding = oTable.getBinding('items');
+        if (oBinding) {
+          oBinding.refresh();
+        }
       },
 
       onSearchPress: function () {
