@@ -259,6 +259,28 @@ sap.ui.define([
       MessageToast.show("New line item added");
     },
 
+    onLineItemSelectionChange: function(oEvent) {
+      const oTable = oEvent.getSource();
+      const oSelectedItem = oEvent.getParameter("listItem");
+      const bSelected = oEvent.getParameter("selected");
+      const oModel = this.getView().getModel();
+      
+      if (bSelected && oSelectedItem) {
+        // Get selected index
+        const aItems = oTable.getItems();
+        const iSelectedIndex = aItems.indexOf(oSelectedItem);
+        
+        // Set selected index to model
+        oModel.setProperty("/selectedLineItemIndex", iSelectedIndex);
+        
+        console.log("Selected line item index:", iSelectedIndex);
+      } else {
+        // No selection - QUAN TRỌNG
+        oModel.setProperty("/selectedLineItemIndex", -1);
+        console.log("No selection - index set to -1");
+      }
+    },
+
     onButtonDeleteLineItemPress: function() {
       const oModel = this.getView().getModel();
       const iSelectedIndex = oModel.getProperty("/selectedLineItemIndex");
@@ -274,6 +296,10 @@ sap.ui.define([
         
         oModel.setProperty("/lineItems", aLineItems);
         oModel.setProperty("/selectedLineItemIndex", -1);
+
+        // Clear table selection
+        const oTable = this.byId("idLineItemsTable");
+        oTable.removeSelections(true);
         
         this._calculateTotals();
         MessageToast.show("Line item deleted");
@@ -427,29 +453,6 @@ sap.ui.define([
       oModel.setProperty("/netAmount", fNetAmount.toFixed(2));
       oModel.setProperty("/taxAmount", fTaxAmount.toFixed(2));
       oModel.setProperty("/totalAmount", fTotalAmount.toFixed(2));
-    },
-
-    // File Upload Handlers
-    onFileUploaderChange: function(oEvent) {
-      const oFileUploader = oEvent.getSource();
-      const sFileName = oFileUploader.getValue();
-      
-      if (sFileName) {
-        const oModel = this.getView().getModel();
-        const aAttachedFiles = oModel.getProperty("/attachedFiles") || [];
-        
-        const oFile = {
-          fileName: sFileName,
-          fileType: sFileName.split('.').pop().toUpperCase(),
-          fileSize: "Unknown", // In real app, get actual file size
-          uploadDate: new Date().toLocaleDateString()
-        };
-        
-        aAttachedFiles.push(oFile);
-        oModel.setProperty("/attachedFiles", aAttachedFiles);
-        
-        MessageToast.show("File attached: " + sFileName);
-      }
     },
 
     onStandardListItemPress: function(oEvent) {
@@ -1230,6 +1233,116 @@ sap.ui.define([
           // Set empty array as fallback
           oModel.setProperty("/incotermsList", []);
         });
+    },
+
+    onFileUploaderChange: function(oEvent) {
+      const oFileUploader = oEvent.getSource();
+      const oFile = oEvent.getParameter("files")[0];
+      const oModel = this.getView().getModel();
+      const aAttachedFiles = oModel.getProperty("/attachedFiles") || [];
+      
+      if (!oFile) {
+        return;
+      }
+      
+      // Check maximum files limit
+      if (aAttachedFiles.length >= 3) {
+        MessageBox.warning("Maximum 3 files allowed. Please remove some files first.");
+        oFileUploader.clear();
+        return;
+      }
+      
+      // Check file size (5MB = 5 * 1024 * 1024 bytes)
+      const maxSize = 5 * 1024 * 1024;
+      if (oFile.size > maxSize) {
+        MessageBox.error("File size exceeds 5MB limit. Please choose a smaller file.");
+        oFileUploader.clear();
+        return;
+      }
+      
+      // Check duplicate file names
+      const isDuplicate = aAttachedFiles.some(file => file.fileName === oFile.name);
+      if (isDuplicate) {
+        MessageBox.warning("A file with this name already exists. Please choose a different file.");
+        oFileUploader.clear();
+        return;
+      }
+      
+      // Format file size
+      const fileSize = this._formatFileSize(oFile.size);
+      
+      // Get file extension
+      const fileType = oFile.name.split('.').pop().toUpperCase();
+      
+      // Create file object
+      const oFileInfo = {
+        id: Date.now() + Math.random(), // Unique ID
+        fileName: oFile.name,
+        fileSize: fileSize,
+        fileType: fileType,
+        file: oFile, // Store actual file object
+        uploadDate: new Date().toLocaleDateString()
+      };
+      
+      // Add to array
+      aAttachedFiles.push(oFileInfo);
+      oModel.setProperty("/attachedFiles", aAttachedFiles);
+      
+      // Clear file uploader for next selection
+      // oFileUploader.clear();
+      
+      MessageToast.show(`File "${oFile.name}" added successfully`);
+    },
+
+    onDeleteAttachmentPress: function(oEvent) {
+      const oItem = oEvent.getSource().getParent().getParent();
+      const oContext = oItem.getBindingContext();
+      const oFileData = oContext.getObject();
+      const oModel = this.getView().getModel();
+      const aAttachedFiles = oModel.getProperty("/attachedFiles");
+      
+      MessageBox.confirm(`Are you sure you want to remove "${oFileData.fileName}"?`, {
+        onClose: function(oAction) {
+          if (oAction === MessageBox.Action.OK) {
+            // Find and remove file
+            const iIndex = aAttachedFiles.findIndex(file => file.id === oFileData.id);
+            
+            if (iIndex >= 0) {
+              aAttachedFiles.splice(iIndex, 1);
+              oModel.setProperty("/attachedFiles", aAttachedFiles);
+              MessageToast.show("File removed successfully");
+            }
+          }
+        }
+      });
+    },
+
+    _formatFileSize: function(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    },
+
+    // Thêm validation cho form
+    _validateAttachments: function() {
+      const oModel = this.getView().getModel();
+      const aAttachedFiles = oModel.getProperty("/attachedFiles") || [];
+      
+      // Optional: có thể bắt buộc phải có ít nhất 1 file
+      if (aAttachedFiles.length === 0) {
+        MessageToast.show("Please attach at least one file");
+        return false;
+      }
+      
+      return true;
+    },
+
+    formatAttachmentListVisible: function(aAttachedFiles) {
+      return aAttachedFiles && aAttachedFiles.length > 0;
     },
 
   });

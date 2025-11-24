@@ -119,6 +119,7 @@
         growing="true"
         growingThreshold="20"
         mode="SingleSelect"
+        selectionChange="onLineItemSelectionChange"
       >
         <headerToolbar>
           <OverflowToolbar>
@@ -166,7 +167,7 @@
         </columns>
 
         <items>
-          <ColumnListItem press="onLineItemPress">
+          <ColumnListItem press="onColumnListItemPress">
             <cells>
               <!-- Material -->
               <Input
@@ -257,43 +258,44 @@
       >
         <content>
           <VBox class="sapUiMediumMargin">
-            <Label text="{i18n>specFileLabel}" class="sapUiTinyMarginBottom" />
-            <unified:FileUploader
-              id="idSpecFileUploader"
-              buttonText="{i18n>chooseSpecFileText}"
-              placeholder="{i18n>specFilePlaceholder}"
-              fileType="pdf,doc,docx,txt"
-              maximumFilenameLength="100"
-              change="onFileUploaderChange"
-            />
-            
-            <Label text="{i18n>approvalDocsLabel}" class="sapUiSmallMarginTop sapUiTinyMarginBottom" />
-            <unified:FileUploader
-              id="idApprovalFileUploader"
-              buttonText="{i18n>chooseApprovalFileText}"
-              placeholder="{i18n>approvalFilePlaceholder}"
-              fileType="pdf,doc,docx,txt,jpg,png"
-              maximumFilenameLength="100"
-              change="onFileUploaderChange"
-            />
-            
-            <Text text="{i18n>attachmentTypesText}" class="sapUiTinyText sapUiSmallMarginTop" />
+            <Label text="Upload Files (Max 3 files, 5MB each)" class="sapUiTinyMarginBottom" />
+            <HBox alignItems="Center" class="sapUiTinyMarginBottom">
+              <unified:FileUploader
+                id="idFileUploader"
+                buttonText="Choose Files"
+                placeholder="Select files to upload"
+                fileType="pdf,doc,docx,txt,jpg,png,xlsx"
+                maximumFilenameLength="100"
+                change="onFileUploaderChange"
+                class="sapUiMediumMarginEnd"
+              />
+            </HBox>
             
             <!-- Uploaded Files List -->
             <List 
               id="idAttachedFilesList"
               items="{/attachedFiles}"
               class="sapUiSmallMarginTop"
-              visible="{= ${/attachedFiles}.length > 0 }"
             >
-              <StandardListItem
-                title="{fileName}"
-                description="{fileType} • {fileSize}"
-                icon="sap-icon://document"
-                type="Active"
-                press="onStandardListItemPress"
-              />
+              <CustomListItem>
+                <content>
+                  <HBox justifyContent="SpaceBetween" alignItems="Center" width="100%">
+                    <VBox class="sapUiMediumMarginEnd">
+                      <Text text="{fileName}" class="sapUiMediumText" />
+                      <Text text="{fileSize} • {fileType}" class="sapUiTinyText" />
+                    </VBox>
+                    <Button 
+                      icon="sap-icon://delete" 
+                      type="Transparent" 
+                      press="onDeleteAttachmentPress"
+                      tooltip="Delete file" />
+                  </HBox>
+                </content>
+              </CustomListItem>
             </List>
+            
+            <Text text="Supported formats: PDF, DOC, DOCX, TXT, JPG, PNG, XLSX" 
+                  class="sapUiTinyText sapUiSmallMarginTop" />
           </VBox>
         </content>
       </Panel>
