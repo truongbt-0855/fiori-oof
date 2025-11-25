@@ -58,7 +58,7 @@ sap.ui.define([
         plantsList: [],
         
         // Form Validation
-        formValid: false,
+        formValid: true,
         minDeliveryDate: new Date(),
         
         // Value states for validation
@@ -134,6 +134,11 @@ sap.ui.define([
       oRouter.navTo("overview");
     },
 
+    navigateToSalesOrderList: function() {
+      const oRouter = this.getOwnerComponent().getRouter();
+      oRouter.navTo("list_so");
+    },
+
     onCustomersComboBoxSelectionChange: function(oEvent) {
       // This method is kept for backward compatibility
       const sSelectedKey = oEvent.getParameter("selectedItem").getKey();
@@ -168,8 +173,6 @@ sap.ui.define([
     },
 
     onShipToComboBoxSelectionChange: function(oEvent) {
-      console.log('onShipToComboBoxSelectionChange');
-      
       const sSelectedKey = oEvent.getParameter("selectedItem").getKey();
       const oModel = this.getView().getModel();
       
@@ -869,11 +872,13 @@ sap.ui.define([
       if (!sIncoterms) {
         oModel.setProperty("/incotermsState", ValueState.Error);
         oModel.setProperty("/incotermsStateText", "Incoterms is required");
+
         return false;
       }
       
       oModel.setProperty("/incotermsState", ValueState.None);
       oModel.setProperty("/incotermsStateText", "");
+
       return true;
     },
 
@@ -996,58 +1001,123 @@ sap.ui.define([
     onButtonSavePress: function() {
       if (this._validateForm()) {
         this._saveSalesOrder();
-      } else {
-        MessageToast.show("Please correct all validation errors before saving");
+
+        return;
       }
+        
+      MessageToast.show("Please correct all validation errors before saving");
     },
 
-    _saveSalesOrder: function() {
+    _saveSalesOrder: async function() {
       const oModel = this.getView().getModel();
       const oData = oModel.getData();
       
+      // Convert attachments to _Files format with base64
+      const aFiles = await this.convertAttachmentsToFiles(oData.attachedFiles);
+
       // Prepare sales order data for S/4HANA
       const oSalesOrderData = {
-        header: {
-          soldToParty: oData.soldToParty,
-          shipToParty: oData.shipToParty,
-          poNumber: oData.poNumber,
-          requestDeliveryDate: oData.requestDeliveryDate,
-          incoterms: oData.incoterms,
-          currency: oData.currency,
-          netAmount: oData.netAmount,
-          taxAmount: oData.taxAmount,
-          totalAmount: oData.totalAmount
-        },
-        lineItems: oData.lineItems.map(item => ({
-          itemNumber: item.itemNumber,
-          materialID: item.materialID,
-          quantity: item.quantity,
-          uom: item.uom,
-          unitPrice: item.unitPrice,
-          totalPrice: item.totalPrice,
-          plant: item.plant,
-          storageLocation: item.storageLocation
+        // Header Data
+        SoldToParty: oData.soldToParty,
+        PurchaseOrderByShipToParty: oData.shipToParty,
+        PurchaseOrderByCustomer: oData.poNumber,
+        RequestedDeliveryDate: oData.requestDeliveryDate,
+        IncotermsClassification: oData.incoterms,
+        TransactionCurrency: oData.currency,
+        TotalNetAmount: oData.netAmount,
+        // Line Items
+        _Items: oData.lineItems.map(item => ({
+          Product: item.materialID,
+          RequestedQuantity: item.quantity,
+          RequestedQuantityUnit: item.uom,
+          UnitPrice: item.unitPrice,
+          Plant: item.plant,
+          StorageLocation: item.storageLocation,
+          NetAmount: item.totalPrice,
         })),
-        attachments: oData.attachedFiles
+        // Files
+        _Files: aFiles
       };
+
+      // Call API to save sales order to Hana DB Cloud would go here
+      const sUrl = "https://803f6caftrial-dev-oof-backend-srv.cfapps.us10-001.hana.ondemand.com/odata/v4/admin/SalesOrders";
       
-      // Simulate saving to S/4HANA
-      console.log("Sales Order Data to be saved:", oSalesOrderData);
-      
-      MessageBox.success(
-        "Sales Order created successfully!\n\n" +
-        "Sold-to: " + oData.soldToParty + "\n" +
-        "Ship-to: " + oData.shipToParty + "\n" +
-        "PO Number: " + oData.poNumber + "\n" +
-        "Line Items: " + oData.lineItems.length + "\n" +
-        "Total Amount: " + oData.totalAmount + " " + oData.currency + "\n" +
-        "Attachments: " + oData.attachedFiles.length + " file(s)", 
-        {
-          onClose: function() {
-            this.onPageCreateSONavButtonPress();
-          }.bind(this)
+      // Show loading
+      MessageToast.show('Creating Sales Order...');
+
+      fetch(sUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(oSalesOrderData)
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
-      );
+        return response.json();
+      })
+      .then(data => {
+        MessageBox.success("Sales Order created successfully!");
+        // Reset form
+        this.resetForm();
+        // Navigate back to Sales Order list
+        this.navigateToSalesOrderList();
+      })
+      .catch(error => {
+        MessageBox.error("Failed to create Sales Order: " + error.message);
+      });
+    },
+
+    resetForm: function() {
+      const oModel = this.getView().getModel();
+      oModel.setData({
+        soldToParty: "",
+        shipToParty: "",
+        poNumber: "",
+        requestDeliveryDate: "",
+        incoterms: "",
+        currency: "",
+        netAmount: 0,
+        lineItems: [],
+        attachedFiles: [],
+        selectedLineItemIndex: -1,
+        attachedFiles: []
+      });
+    },
+
+    convertAttachmentsToFiles: async function(attachments) {
+      const aFiles = [];
+
+      if (!attachments || attachments.length === 0) {
+        return aFiles;
+      }
+
+      for (const attachment of attachments) {
+        const base64Content = await this.convertFileToBase64(attachment.file);
+        aFiles.push({
+          fileName: attachment.fileName,
+          file: base64Content
+        });
+      }
+
+      return aFiles;
+    },
+
+    convertFileToBase64: function(fileObject) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = function() {
+          // Remove data:*/*;base64, prefix to get only base64 string
+          const base64Data = reader.result.split(',')[1];
+          resolve(base64Data);
+        };
+        reader.onerror = function(error) {
+          reject(error);
+        };
+        reader.readAsDataURL(fileObject);
+      });
     },
 
     onSoldToComboBoxOpen: function() {
@@ -1237,61 +1307,58 @@ sap.ui.define([
 
     onFileUploaderChange: function(oEvent) {
       const oFileUploader = oEvent.getSource();
-      const oFile = oEvent.getParameter("files")[0];
       const oModel = this.getView().getModel();
-      const aAttachedFiles = oModel.getProperty("/attachedFiles") || [];
-      
-      if (!oFile) {
+      let aAttachedFiles = oModel.getProperty("/attachedFiles") || []; // Existing attached files
+
+      const oFiles = oEvent.getParameter("files"); // All selected files
+      const MAX_FILES = 5;
+
+      if (!oFiles) {
         return;
       }
-      
+
       // Check maximum files limit
-      if (aAttachedFiles.length >= 3) {
-        MessageBox.warning("Maximum 3 files allowed. Please remove some files first.");
+      if (oFiles.length + (this.getView().getModel().getProperty("/attachedFiles") || []).length > MAX_FILES) {
+        MessageBox.warning(`"Maximum ${MAX_FILES} files allowed. Please remove some files first."`);
         oFileUploader.clear();
+
         return;
       }
-      
-      // Check file size (5MB = 5 * 1024 * 1024 bytes)
-      const maxSize = 5 * 1024 * 1024;
-      if (oFile.size > maxSize) {
-        MessageBox.error("File size exceeds 5MB limit. Please choose a smaller file.");
-        oFileUploader.clear();
-        return;
+
+      // Check file size (50MB = 50 * 1024 * 1024 bytes)
+      const MAX_SIZE = 50 * 1024 * 1024; // 50MB
+      for (let i = 0; i < oFiles.length; i++) {
+        if (oFiles[i].size > MAX_SIZE) {
+          MessageBox.error(`File "${oFiles[i].name}" exceeds the 50MB size limit. Please choose a smaller file.`);
+          oFileUploader.clear();
+
+          return;
+        }
       }
-      
-      // Check duplicate file names
-      const isDuplicate = aAttachedFiles.some(file => file.fileName === oFile.name);
-      if (isDuplicate) {
+
+      // Check duplicate file names with existing attachments
+      const aFiles = Array.from(oFiles);
+      const hasDuplicate = aFiles.some(file => {
+        return aAttachedFiles.some(attachedFile => attachedFile.fileName === file.name);
+      });
+
+      if (hasDuplicate) {
         MessageBox.warning("A file with this name already exists. Please choose a different file.");
         oFileUploader.clear();
+
         return;
       }
       
-      // Format file size
-      const fileSize = this._formatFileSize(oFile.size);
+      const formattedFiles = this._formatFiles(aFiles)
       
-      // Get file extension
-      const fileType = oFile.name.split('.').pop().toUpperCase();
-      
-      // Create file object
-      const oFileInfo = {
-        id: Date.now() + Math.random(), // Unique ID
-        fileName: oFile.name,
-        fileSize: fileSize,
-        fileType: fileType,
-        file: oFile, // Store actual file object
-        uploadDate: new Date().toLocaleDateString()
-      };
-      
-      // Add to array
-      aAttachedFiles.push(oFileInfo);
+      aAttachedFiles = aAttachedFiles.concat(formattedFiles);
       oModel.setProperty("/attachedFiles", aAttachedFiles);
-      
+
       // Clear file uploader for next selection
-      // oFileUploader.clear();
+      oFileUploader.clear();
       
-      MessageToast.show(`File "${oFile.name}" added successfully`);
+      const fileNames = this._joinFileNames(aAttachedFiles);
+      MessageToast.show(`Files "${fileNames}" added successfully`);
     },
 
     onDeleteAttachmentPress: function(oEvent) {
@@ -1325,6 +1392,28 @@ sap.ui.define([
       const i = Math.floor(Math.log(bytes) / Math.log(k));
       
       return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    },
+
+     _formatFiles: function(aFiles) {
+      return aFiles.map(file => {
+        const fileSize = this._formatFileSize(file.size);
+        const fileType = file.name.split('.').pop().toUpperCase();
+        return {
+          id: Date.now() + Math.random(),
+          fileName: file.name,
+          fileSize: fileSize,
+          fileType: fileType,
+          file: file,
+          uploadDate: new Date().toLocaleDateString()
+        };
+      });
+    },
+
+    _joinFileNames: function(aAttachedFiles) {
+      if (!aAttachedFiles || !aAttachedFiles) {
+        return "";
+      }
+      return aAttachedFiles.map(file => file.fileName).join(", ");
     },
 
     // Thêm validation cho form
