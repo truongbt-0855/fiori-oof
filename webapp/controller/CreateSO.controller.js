@@ -16,6 +16,7 @@ sap.ui.define([
     onInit() {
       // Get API URL from config
       this.MATERIAL_API_URL = Config.getMaterialApiUrl();
+      this.UOM_API_URL = "https://803f6caftrial-dev-oof-backend-srv.cfapps.us10-001.hana.ondemand.com/odata/v4/uom/loadUom";
       this.getView().addStyleClass(this.getOwnerComponent().getContentDensityClass());
       
       // Initialize form data model
@@ -44,7 +45,6 @@ sap.ui.define([
         // Calculated Values
         totalItems: 0,
         netAmount: 0,
-        taxAmount: 0,
         totalAmount: 0,
         currency: "USD",
         
@@ -231,6 +231,10 @@ sap.ui.define([
         materialDescription: "",
         quantity: "",
         uom: "EA",
+        uomDisplayValue: "EA",
+        uomBaseValue: "EA",
+        uomList: [],
+        uomLoading: true,
         unitPrice: 0,
         totalPrice: 0,
         plant: "",
@@ -320,6 +324,8 @@ sap.ui.define([
 
     // Line Item Field Changes
     onLineItemMaterialChange: function(oEvent) {
+      console.log('onLineItemMaterialChange');
+      
       const oSource = oEvent.getSource();
       const oContext = oSource.getBindingContext();
       const sMaterialID = oEvent.getParameter("value");
@@ -343,6 +349,25 @@ sap.ui.define([
     onLineItemUoMChange: function(oEvent) {
       const oSource = oEvent.getSource();
       const oContext = oSource.getBindingContext();
+      const sSelectedUom = oEvent.getParameter("selectedItem").getKey();
+      const oModel = this.getView().getModel();
+      
+      // Get UoM list for this line item
+      const aUomList = oModel.getProperty(oContext.getPath() + "/uomList") || [];
+      
+      // Find selected UoM data to get BaseISOUnit
+      const oSelectedUomData = aUomList.find(uom => uom.AlternativeISOUnit === sSelectedUom);
+      
+      if (oSelectedUomData) {
+        // Update base value for submit
+        oModel.setProperty(oContext.getPath() + "/uomBaseValue", oSelectedUomData.BaseISOUnit);
+        oModel.setProperty(oContext.getPath() + "/uomDisplayValue", oSelectedUomData.AlternativeISOUnit);
+        
+        console.log(`UoM changed to:`, {
+          display: oSelectedUomData.AlternativeISOUnit,
+          base: oSelectedUomData.BaseISOUnit
+        });
+      }
       
       this._validateLineItem(oContext);
     },
@@ -399,6 +424,9 @@ sap.ui.define([
         oModel.setProperty(oContext.getPath() + "/unitPrice", oFoundMaterial.unitPrice);
         oModel.setProperty(oContext.getPath() + "/uom", oFoundMaterial.baseUoM);
         
+        // Load UoM from API
+        this._loadUoMForMaterial(oContext, sMaterialID);
+        
         this._calculateLineItemTotal(oContext);
       }
     },
@@ -412,6 +440,70 @@ sap.ui.define([
       const fTotal = fQuantity * fUnitPrice;
       
       oModel.setProperty(sPath + "/totalPrice", fTotal.toFixed(2));
+    },
+
+    _loadUoMForMaterial: function(oContext, sMaterialID) {
+      const sUrl = `${this.UOM_API_URL}?Material='${sMaterialID}'`;
+      const oModel = this.getView().getModel();
+      const sPath = oContext.getPath();
+      
+      // Set loading state - disable UoM field
+      oModel.setProperty(sPath + "/uomLoading", true);
+      
+      jQuery.ajax({
+        url: sUrl,
+        type: "GET",
+        contentType: "application/json",
+          success: (oData) => {
+            if (oData && oData.uom && oData.uom.length > 0) {
+              // Set entire UoM list to line item
+              oModel.setProperty(sPath + "/uomList", oData.uom);
+              
+              // Auto-select first UoM
+              const oUomData = oData.uom[0];
+              
+              // Set display value (AlternativeISOUnit) - shown in ComboBox
+              oModel.setProperty(sPath + "/uomDisplayValue", oUomData.AlternativeISOUnit);
+              
+              // Set base value (BaseISOUnit) - used for submit
+              oModel.setProperty(sPath + "/uomBaseValue", oUomData.BaseISOUnit);
+              
+              // Set selected UoM with AlternativeISOUnit
+              oModel.setProperty(sPath + "/uom", oUomData.AlternativeISOUnit);
+              
+              console.log(`UoM loaded for material ${sMaterialID}:`, {
+                  list: oData.uom,
+                  selected: oUomData.AlternativeISOUnit,
+                  base: oUomData.BaseISOUnit
+              });
+            } else {
+              // Fallback to default
+              const aDefaultUom = [{ AlternativeISOUnit: "EA", BaseISOUnit: "EA" }];
+              oModel.setProperty(sPath + "/uomList", aDefaultUom);
+              oModel.setProperty(sPath + "/uom", "EA");
+              oModel.setProperty(sPath + "/uomDisplayValue", "EA");
+              oModel.setProperty(sPath + "/uomBaseValue", "EA");
+            }
+              
+              // Clear loading state - enable UoM field
+            oModel.setProperty(sPath + "/uomLoading", false);
+          },
+          error: (xhr, status, error) => {
+            console.error("Error loading UoM:", error);
+            
+            // Fallback to default
+            const aDefaultUom = [{ AlternativeISOUnit: "EA", BaseISOUnit: "EA" }];
+            oModel.setProperty(sPath + "/uomList", aDefaultUom);
+            oModel.setProperty(sPath + "/uom", "EA");
+            oModel.setProperty(sPath + "/uomDisplayValue", "EA");
+            oModel.setProperty(sPath + "/uomBaseValue", "EA");
+            
+            // Clear loading state - enable UoM field
+            oModel.setProperty(sPath + "/uomLoading", false);
+            
+            MessageToast.show("Failed to load UoM, using default value");
+          }
+        });
     },
 
     _loadStorageLocationsForPlant: function(oContext, sPlantCode) {
@@ -449,12 +541,10 @@ sap.ui.define([
         fNetAmount += parseFloat(oItem.totalPrice) || 0;
       });
       
-      const fTaxAmount = fNetAmount * 0.19; // 19% VAT
-      const fTotalAmount = fNetAmount + fTaxAmount;
+      const fTotalAmount = fNetAmount;
       
       oModel.setProperty("/totalItems", iTotalItems);
       oModel.setProperty("/netAmount", fNetAmount.toFixed(2));
-      oModel.setProperty("/taxAmount", fTaxAmount.toFixed(2));
       oModel.setProperty("/totalAmount", fTotalAmount.toFixed(2));
     },
 
@@ -486,12 +576,15 @@ sap.ui.define([
           this._oMaterialDialog.open();
         }.bind(this));
       } else {
-        this._loadMaterialData();
+        // Check if dialog already has data
+        const oMaterialModel = this._oMaterialDialog.getModel("materials");
+        if (!oMaterialModel || !oMaterialModel.getData() || oMaterialModel.getData().length === 0) {
+          // No data yet, load it
+          this._loadMaterialData();
+        }
         this._oMaterialDialog.open();
       }
     },
-
-        // Constants
 
     _loadMaterialData: function() {
       if (!this._oMaterialDialog) return;
@@ -580,18 +673,11 @@ sap.ui.define([
             value: oSelectedMaterial.materialID
         });
         
-        
-        // const oModel = this.getView().getModel();
-        // oModel.setProperty("/materialID", oSelectedMaterial.materialID);
-        // oModel.setProperty("/materialDescription", oSelectedMaterial.materialDescription);
-        // oModel.setProperty("/unitPrice", oSelectedMaterial.unitPrice);
-        
-        // // Set availability status
-        // this._setAvailabilityStatus(oSelectedMaterial);
-        
-        // // Clear validation state
-        // oModel.setProperty("/materialIDState", ValueState.None);
-        // oModel.setProperty("/materialIDStateText", "");
+        // Load UoM for selected material
+        const oInputContext = this._oCurrentMaterialInput.getBindingContext();
+        if (oInputContext) {
+          this._loadUoMForMaterial(oInputContext, oSelectedMaterial.materialID);
+        }
         
         // Recalculate price
         this._calculateTotalPrice();
@@ -1029,7 +1115,7 @@ sap.ui.define([
         _Items: oData.lineItems.map(item => ({
           Product: item.materialID,
           RequestedQuantity: item.quantity,
-          RequestedQuantityUnit: item.uom,
+          RequestedQuantityUnit: item.uomBaseValue || item.uom, // Use BaseISOUnit for submit
           UnitPrice: item.unitPrice,
           Plant: item.plant,
           StorageLocation: item.storageLocation,

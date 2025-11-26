@@ -176,7 +176,6 @@
                 placeholder="{i18n>materialIdPlaceholder}"
                 valueHelpRequest="onMaterialValueHelpRequest"
                 showValueHelp="true"
-                change="onLineItemMaterialChange"
                 valueState="{materialIDState}"
                 valueStateText="{materialIDStateText}"
               />
@@ -194,13 +193,14 @@
               <!-- UoM -->
               <ComboBox
                 selectedKey="{uom}"
-                items="{/uomList}"
+                items="{uomList}"
                 placeholder="{i18n>uomPlaceholder}"
                 selectionChange="onLineItemUoMChange"
                 valueState="{uomState}"
                 valueStateText="{uomStateText}"
+                busy="{uomLoading}"
               >
-                <core:Item key="{code}" text="{code} - {description}" />
+                <core:Item key="{AlternativeISOUnit}" text="{AlternativeISOUnit}" />
               </ComboBox>
               
               <!-- Price -->
@@ -330,19 +330,12 @@
                 emphasized="true"
               />
               
-              <Label text="{i18n>taxAmountLabel}" />
-              <ObjectNumber 
-                number="{/taxAmount}" 
-                unit="{/currency}"
-              />
-              
               <Label text="{i18n>totalAmountLabel}" />
               <ObjectNumber 
                 number="{/totalAmount}" 
                 unit="{/currency}"
                 state="Success"
                 emphasized="true"
-                class="sapUiLargeMarginTop"
               />
             </f:content>
           </f:SimpleForm>
