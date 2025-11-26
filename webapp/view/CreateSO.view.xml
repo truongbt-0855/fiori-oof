@@ -89,6 +89,7 @@
             change="onRequestDeliveryDatePickerChange"
             minDate="{/minDeliveryDate}"
             required="true"
+            valueFormat="yyyy-MM-dd"
           />
 
           <!-- Incoterms -->
@@ -258,7 +259,7 @@
       >
         <content>
           <VBox class="sapUiMediumMargin">
-            <Label text="Upload Files (Max 3 files, 5MB each)" class="sapUiTinyMarginBottom" />
+            <Label text="Upload Files (Max 5 files, 50MB each)" class="sapUiTinyMarginBottom" />
             <HBox alignItems="Center" class="sapUiTinyMarginBottom">
               <unified:FileUploader
                 id="idFileUploader"
@@ -268,6 +269,8 @@
                 maximumFilenameLength="100"
                 change="onFileUploaderChange"
                 class="sapUiMediumMarginEnd"
+                multiple="true"
+                maximumFileSize="50"
               />
             </HBox>
             
@@ -360,7 +363,6 @@
           text="{i18n>saveButtonText}"
           type="Emphasized"
           press="onButtonSavePress"
-          enabled="{/formValid}"
         />
       </OverflowToolbar>
     </footer>
